@@ -4,7 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('index');
 });
 
 Route::get('/dashboard', function () {
@@ -18,3 +18,19 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+Route::get('/', function () {
+    return view('index');
+});
+
+Route::get('messages', function () {
+    return view('messages');
+});
+
+Route::get('dashboard-home', function () {
+    return view('homedashboard');
+});
+
+Route::get('appointment', function () {
+    return view('appointment.createappointment');
+});
