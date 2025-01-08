@@ -13,13 +13,14 @@ return new class extends Migration
     {
         Schema::create('recruitments', function (Blueprint $table) {
             $table->id();
-            $table->id_hairdresser();
-            $table->id_recruiter();
-            $table->service_adress();
-            $table->service_date();
-            $table->service_hour();
-            $table->service_price();
-            $table->kills_wanted();
+            $table->foreignId('id_babers')->constrained('barbers');
+            $table->foreignId('id_recruiters')->constrained('recruiters');
+            $table->text('service_adress');
+            $table->float('location_distance',8,2);
+            $table->datetime('start_time');
+            $table->datetime('end_time');
+            $table->unsignedInteger('service_price');
+            $table->text('kills_wanted');
             $table->timestamps();
         });
     }

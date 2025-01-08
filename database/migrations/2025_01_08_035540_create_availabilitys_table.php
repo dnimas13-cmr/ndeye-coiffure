@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('messages', function (Blueprint $table) {
+        Schema::create('availabilitys', function (Blueprint $table) {
             $table->id();
-            $table->id_user1();
-            $table->id_user2();
-            $table->id_echange();
-            $table->date_message();
-            $table->content();
+            $table->foreignId('id_barbers')->constrained('barbers');
+            $table->unsignedInteger('day_of_week');
+            $table->datetime('start_time');
+            $table->datetime('end_time');
             $table->timestamps();
+            
         });
     }
 
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('messages');
+        Schema::dropIfExists('availabilitys');
     }
 };

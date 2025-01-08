@@ -13,16 +13,17 @@ return new class extends Migration
     {
         Schema::create('barbers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_user')->constrained();
-            $table->unsignedInteger('account_type');
-            $table->availability();
+            $table->foreignId('id_users')->constrained('users');
+            $table->string('account_type',255);
             $table->string('listformation');
             $table->string('listkill');
             $table->string('list_hairstyle');
             $table->longtext('bibliography');
             $table->unsignedInteger('year_of_experience');
-            $table->text('recommendations');
-            $table->string('cni_photo');
+            $table->unsignedInteger('reponse_time');
+            $table->unsignedInteger('mission_acceptance_rate');
+            $table->unsignedInteger('positive_reviews');
+            $table->string('cni_photo')->nullable();
             $table->timestamps();
         });
     }

@@ -13,16 +13,17 @@ return new class extends Migration
     {
         Schema::create('appointments', function (Blueprint $table) {
             $table->id();
-            $table->id_custommer();
-            $table->id_hairstyle();
-            $table->appointment_date();
-            $table->appointment_hour();
-            $table->appointment_adress();
-            $table->appointment_hairstyle();
-            $table->type_adress();
-            $table->person_type();
-            $table->number_people();
-            $table->price();
+            $table->foreignId('id_customers')->constrained('customers');
+            $table->foreignId('id_hairstyles')->constrained('hairstyles');
+            $table->foreignId('id_barbers')->constrained('barbers');
+            $table->datetime('appointment_start_time');
+            $table->datetime('appointment_end_time');
+            $table->text('appointment_adress');
+            $table->string('type_adress',255);
+            $table->string('person_type',255);
+            $table->unsignedInteger('number_of_people_to_do_hair');
+            $table->unsignedInteger('price');
+            $table->string('status',255);
             $table->timestamps();
         });
     }

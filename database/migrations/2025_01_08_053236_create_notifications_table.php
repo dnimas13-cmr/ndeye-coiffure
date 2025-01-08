@@ -11,15 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('hairstyles', function (Blueprint $table) {
+        Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->id_hairdresser();
-            $table->hairstyle_name();
-            $table->hairstyle_price();
-            $table->category();
-            $table->realisation_time();
-            $table->type_forfait();
-            $table->type_classic();
+            $table->text('notification_content');
+            $table->string('notification_type');
             $table->timestamps();
         });
     }
@@ -29,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('hairstyles');
+        Schema::dropIfExists('notifications');
     }
 };

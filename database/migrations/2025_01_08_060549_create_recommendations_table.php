@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reviews', function (Blueprint $table) {
+        Schema::create('recommendations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_customers')->constrained('customers');
             $table->foreignId('id_barbers')->constrained('barbers');
-            $table->text('messages');
-            $table->datetime('review_date');
-            $table->string('reviews_type');
-            $table->unsignedInteger('number_stars');
+            $table->text('mission_title');
+            $table->longtext('mission_description');
+            $table->text('mission_image');
+            $table->text('person_name');
+            $table->dateTime('mission_realisation_date');
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('reviews');
+        Schema::dropIfExists('recommendations');
     }
 };
