@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
+use App\Models\Barber;
+use App\Models\Customer;
+use App\Models\Recruiter;
 
 class RegisteredUserController extends Controller
 {
@@ -33,14 +37,44 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'account_type' => ['nullable'],
+            'phone_number' => ['required', 'regex:/^(\+33|0)[1-9](\d{2}){4}$/'],
         ]);
-
+        //dd($user );
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'account_type' => $request->account_type,
+            'phone_number' => $request->phone_number
         ]);
+        $account_type = $request->account_type;
+        //dd($account_type);
+       if($account_type === 'coiffeur_affilie')
+       {
+        // Création du profil barber associé
+        Barber::create([
+            'id_users' => $user->id, // Lier le barber à l'utilisateur créé
+            // Mettre d'autres champs à null ou avec des valeurs par défaut
+        ]);
+        }
+        elseif($account_type === 'particulier')
+        {
+            // Création du profil barber associé
+        Customer::create([
+            'id_users' => $user->id, // Lier le barber à l'utilisateur créé
+            // Mettre d'autres champs à null ou avec des valeurs par défaut
+        ]);
+        }
 
+        elseif($account_type === 'recruteur')
+        {
+            // Création du profil barber associé
+        Recruiter::create([
+            'id_users' => $user->id, // Lier le barber à l'utilisateur créé
+            // Mettre d'autres champs à null ou avec des valeurs par défaut
+        ]);
+        }
         event(new Registered($user));
 
         Auth::login($user);

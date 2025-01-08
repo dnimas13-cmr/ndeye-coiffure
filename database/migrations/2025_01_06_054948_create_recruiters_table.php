@@ -14,9 +14,8 @@ return new class extends Migration
         Schema::create('recruiters', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_users')->constrained('users');
-            $table->string('account_type',255);
-            $table->longtext('list_kill_wanted');
-            $table->longtext('bibliography');
+            $table->longtext('list_kill_wanted')->nullable();
+            $table->longtext('bibliography')->nullable();
             $table->string('cni_photo')->nullable();
             $table->timestamps();
         });

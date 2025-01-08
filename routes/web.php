@@ -34,3 +34,7 @@ Route::get('dashboard-home', function () {
 Route::get('appointment', function () {
     return view('appointment.createappointment');
 });
+
+Route::get('choix-type-compte', function () {
+    return view('auth.choise-type-account');
+});

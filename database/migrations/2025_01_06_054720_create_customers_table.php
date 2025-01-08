@@ -14,9 +14,8 @@ return new class extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_users')->constrained('users');
-            $table->string('account_type',255);
-            $table->unsignedInteger('number_appointment');
-            $table->unsignedInteger('number_courses');
+            $table->unsignedInteger('number_appointment')->nullable();
+            $table->unsignedInteger('number_courses')->nullable();
             $table->timestamps();
         });
     }
