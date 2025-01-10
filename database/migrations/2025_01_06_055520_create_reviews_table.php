@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('id_customers')->constrained('customers');
             $table->foreignId('id_barbers')->constrained('barbers');
             $table->text('messages');
-            $table->datetime('review_date');
-            $table->string('reviews_type');
+            $table->datetime('review_date')->nullable();;
+            $table->string('reviews_type')->nullable();;
             $table->unsignedInteger('number_stars');
             $table->timestamps();
         });

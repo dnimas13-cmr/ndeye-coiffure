@@ -28,9 +28,15 @@
         .then(data => {
             if (data.success) {
                 window.location.href = '{{ route('appointments.partials.step2') }}';
+            } else if (data.errors && data.errors.location) {
+                document.getElementById('errorLocation').innerHTML = data.errors.location.join(', '); // S'assure que tous les messages d'erreur sont affichés.
             } else {
-                document.getElementById('errorLocation').innerHTML = data.errors.location;
+                document.getElementById('errorLocation').innerHTML = "Une erreur inattendue est survenue.";
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('errorLocation').innerHTML = "Erreur lors du traitement de la requête.";
         });
     }
     </script>

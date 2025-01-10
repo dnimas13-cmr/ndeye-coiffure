@@ -16,12 +16,12 @@ return new class extends Migration
             $table->foreignId('id_barbers')->constrained('barbers');
             $table->string('hairstyle_name',255);
             $table->unsignedInteger('hairstyle_price');
-            $table->string('category');
+            $table->string('category')->nullable();;
             $table->unsignedInteger('realisation_time');
-            $table->string('type_forfait');
-            $table->string('type_classic');
-            $table->text('hairstyle_photos');
-            $table->text('hairstyle_description');
+            $table->string('type_forfait')->nullable();;
+            $table->string('type_classic')->nullable();;
+            $table->text('hairstyle_photos')->nullable();;
+            $table->text('hairstyle_description')->nullable();;
             $table->timestamps();
         });
     }

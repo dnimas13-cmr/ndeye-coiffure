@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('id_barbers')->constrained('barbers');
             $table->text('mission_title');
-            $table->longtext('mission_description');
-            $table->text('mission_image');
-            $table->text('person_name');
-            $table->dateTime('mission_realisation_date');
+            $table->longtext('mission_description')->nullable();;
+            $table->text('mission_image')->nullable();;
+            $table->text('person_name')->nullable();;
+            $table->dateTime('mission_realisation_date')->nullable();;
             $table->timestamps();
         });
     }

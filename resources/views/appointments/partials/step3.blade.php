@@ -20,36 +20,47 @@
     </div>
     
     <script>
-    function checkOther(value) {
-        var otherInput = document.getElementById('otherDetail');
-        otherInput.style.display = value === 'autres' ? 'block' : 'none';
-    }
+        function checkOther(value) {
+            var otherInput = document.getElementById('otherDetail');
+            otherInput.style.display = value === 'autres' ? 'block' : 'none';
+            if (value !== 'autres') {
+                otherInput.value = ''; // Assurez-vous de vider le champ si ce n'est pas nécessaire
+            }
+        }
+        
+        function submitStep3() {
+            const timing = document.getElementById('timing').value;
+            const otherInput = document.getElementById('otherDetail');
+            const otherDetail = otherInput.style.display === 'block' && otherInput.value.trim() !== '' ? otherInput.value.trim() : null;
     
-    function submitStep3() {
-        const form = document.getElementById('step3Form');
-        const timing = document.getElementById('timing').value;
-        const otherDetail = document.getElementById('otherDetail').style.display === 'block' ? document.getElementById('otherDetail').value : '';
-    
-        fetch('{{ route('appointments.partials.step3') }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
-            },
-            body: JSON.stringify({ timing: timing, otherDetail: otherDetail })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.href = '{{ route('appointments.partials.step4') }}';
+            // Construire l'objet de données en fonction de la présence de otherDetail
+            let data = { timing: timing };
+            if (otherDetail) {
+                data.otherDetail = otherDetail;
+            }
+            
+            fetch('{{ route('appointments.partials.step3') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{{ route('appointments.partials.step4') }}';
+                } else if (data.errors && data.errors.timing) {
+                document.getElementById('timingError').innerHTML = data.errors.timing.join(', '); // S'assure que tous les messages d'erreur sont affichés.
             } else {
-                document.getElementById('timingError').innerHTML = data.errors.timing ? data.errors.timing : '';
-                if (data.errors.otherDetail) {
-                    document.getElementById('timingError').innerHTML += data.errors.otherDetail;
-                }
+                document.getElementById('timingError').innerHTML = "Une erreur inattendue est survenue.";
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('timingError').innerHTML = "Erreur lors du traitement de la requête.";
+        });
     }
     </script>
 

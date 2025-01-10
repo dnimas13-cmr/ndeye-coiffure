@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('availabilitys', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_barbers')->constrained('barbers');
-            $table->unsignedInteger('day_of_week');
-            $table->datetime('start_time');
-            $table->datetime('end_time');
+            $table->unsignedInteger('day_of_week')->nullable();;
+            $table->datetime('start_time')->nullable();;
+            $table->datetime('end_time')->nullable();;
             $table->timestamps();
             
         });

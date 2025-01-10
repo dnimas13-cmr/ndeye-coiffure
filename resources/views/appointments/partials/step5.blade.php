@@ -22,7 +22,7 @@
                 <input type="text" id="child" name="child_haircut" value="0" readonly>
                 <button type="button" onclick="increment('child')">+</button>
             </div>
-            <div id="haircutError"></div>
+            <div id="haircutError1"></div>
             <button type="button" onclick="submitStep5()">Suivant</button>
             <button type="button" onclick="window.history.back();">Retour</button>
         </form>
@@ -49,7 +49,7 @@
         const child = document.getElementById('child').value;
     
         if (female == 0 && male == 0 && child == 0) {
-            document.getElementById('haircutError').textContent = 'Please select at least one option.';
+            document.getElementById('haircutError1').textContent = 'veuillez choisir au moins une personne';
             return;
         }
     
@@ -66,10 +66,13 @@
             if (data.success) {
                 window.location.href = '{{ route('appointments.partials.step6') }}';
             } else {
-                document.getElementById('haircutError').innerHTML = data.errors ? data.errors.join('<br />') : 'An error occurred.';
+                document.getElementById('haircutError1').innerHTML = Object.values(data.errors).join(', ');
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('haircutError1').innerHTML = "Erreur lors du traitement de la requête.";
+        });
     }
     </script>
 

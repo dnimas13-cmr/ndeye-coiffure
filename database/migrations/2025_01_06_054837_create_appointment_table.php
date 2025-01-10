@@ -23,7 +23,9 @@ return new class extends Migration
             $table->string('person_type',255);
             $table->unsignedInteger('number_of_people_to_do_hair');
             $table->unsignedInteger('price');
-            $table->string('status',255);
+            $table->string('status',255)->nullable();;
+            $table->string('selected_profile',255)->nullable();
+            $table->string('rejected_profile',255)->nullable();
             $table->timestamps();
         });
     }

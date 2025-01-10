@@ -46,10 +46,10 @@ Route::post('/appointments/partials/step2', [AppointmentsController::class, 'pos
 Route::get('/appointments/partials/step3', [AppointmentsController::class, 'createStep3'])->name('appointments.partials.step3');
 Route::post('/appointments/partials/step3', [AppointmentsController::class, 'postStep3']);
 Route::get('/appointments/partials/step4', [AppointmentsController::class, 'createStep4'])->name('appointments.partials.step4');
-Route::post('/appointments/partials/step4', [AppointmentsController::class, 'postStep4']);;
+Route::post('/appointments/partials/step4', [AppointmentsController::class, 'postStep4']);
 Route::get('/appointments/partials/step5', [AppointmentsController::class, 'createStep5'])->name('appointments.partials.step5');
 Route::post('/appointments/partials/step5', [AppointmentsController::class, 'postStep5']);
 Route::get('/appointments/partials/step6', [AppointmentsController::class, 'createStep6'])->name('appointments.partials.step6');
-Route::post('/appointments/partials/step6', [AppointmentsController::class, 'postStep6']);;
+Route::post('/appointments/partials/step6', [AppointmentsController::class, 'postStep6']);
 Route::get('/appointments/review', [AppointmentsController::class, 'review'])->name('appointments.review');
 Route::post('/appointments/store', [AppointmentsController::class, 'store'])->name('appointments.store');

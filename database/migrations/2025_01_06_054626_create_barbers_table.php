@@ -14,15 +14,16 @@ return new class extends Migration
         Schema::create('barbers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_users')->constrained('users');
-            $table->string('listformation')->nullable();;
+            $table->string('listformation')->nullable();
             $table->string('listkill')->nullable();;
-            $table->string('list_hairstyle')->nullable();;
-            $table->longtext('bibliography')->nullable();;
-            $table->unsignedInteger('year_of_experience')->nullable();;
-            $table->unsignedInteger('reponse_time')->nullable();;
-            $table->unsignedInteger('mission_acceptance_rate')->nullable();;
-            $table->unsignedInteger('positive_reviews')->nullable();;
+            $table->string('list_hairstyle')->nullable();
+            $table->longtext('bibliography')->nullable();
+            $table->unsignedInteger('year_of_experience')->nullable();
+            $table->unsignedInteger('reponse_time')->nullable();
+            $table->unsignedInteger('mission_acceptance_rate')->nullable();
+            $table->unsignedInteger('positive_reviews')->nullable();
             $table->string('cni_photo')->nullable();
+            $table->float('performance_score',8,2)->nullable();
             $table->timestamps();
         });
     }

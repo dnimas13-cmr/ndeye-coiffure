@@ -13,7 +13,7 @@
             <li>Coiffure Femme: {{ session('appointment.step5.female_haircut') }}</li>
             <li>Coiffure Homme: {{ session('appointment.step5.male_haircut') }}</li>
             <li>Coiffure Enfant: {{ session('appointment.step5.child_haircut') }}</li>
-            <li>Style choisi: {{ session('appointment.step6.haircut_id') }}</li>
+            <li>Coiffure choisi: {{ session('appointment.step6.haircut_id') }}</li>
         </ul>
         <form id="reviewForm" action="{{ route('appointments.store') }}" method="POST">
             @csrf

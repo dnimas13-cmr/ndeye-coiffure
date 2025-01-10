@@ -20,5 +20,6 @@ class Barber extends Model
           'mission_acceptance_rate',
           'positive_reviews',
           'cni_photo',
+          'performance_score',
      ];
 }
