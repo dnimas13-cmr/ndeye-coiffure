@@ -17,25 +17,47 @@
             <button type="button" onclick="goToStep2()">Suivant</button>
         </div>
 </form>
-    <script>
-         function goToStep2() {
+<script>
+    function goToStep2() {
         var selectElement = document.getElementById('accountTypeSelect');
         var accountType = selectElement.value;
         var errorMessage = document.getElementById('error-message');
+        var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content'); // Assurez-vous que cette balise meta est présente dans le <head>
 
         // Effacer le message d'erreur précédent
         errorMessage.style.display = 'none';
 
         if (accountType) {
-            localStorage.setItem('account_type', accountType);
-            //alert(accountType);
-            window.location.href = '/register';
+            fetch('{{ route('auth.choix-type-compte') }}', {  // Utilisez la bonne URL générée par Laravel
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken  // Nécessaire pour les requêtes POST dans Laravel
+                },
+                body: JSON.stringify({ account_type: accountType })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/register'; // Redirection si succès
+                } else {
+                    // Gérer les erreurs de validation ou autres erreurs
+                    if (data.errors && data.errors.account_type) {
+                        errorMessage.textContent = data.errors.account_type[0]; // Affiche le premier message d'erreur pour account_type
+                        errorMessage.style.display = 'block';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                errorMessage.textContent = 'Une erreur est survenue lors de l\'envoi des données.';
+                errorMessage.style.display = 'block';
+            });
         } else {
             // Afficher le message d'erreur si aucune option n'est sélectionnée
+            errorMessage.textContent = 'Veuillez choisir un type de compte.';
             errorMessage.style.display = 'block';
         }
     }
-    //var accountType2 = localStorage.getItem('account_type');
-    //alert(accountType2);
-    </script>
+</script>
 </x-guest-layout>

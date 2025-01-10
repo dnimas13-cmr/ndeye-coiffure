@@ -1,8 +1,12 @@
 <x-guest-layout>
-   
+    @if(!session()->has('account_type'))
+    <script>
+        window.location.href = "{{ route('auth.choix-type-compte') }}"; // Utilisez JavaScript pour rediriger
+    </script>
+    @endif
     @section('title', __('inscription'))
 
-   
+    
     <form method="POST" action="{{ route('register') }}">
         @csrf
 
@@ -58,7 +62,7 @@
             <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
                 {{ __('Already registered?') }}
             </a>
-            <input type="hidden" name="account_type" value="default" id="accountTypeField">
+            <input type="hidden" name="account_type" value="{{ session('account_type', 'default') }}" id="accountTypeField">
             <button type="button" onclick="goToStep1()">Retour</button>
             <x-primary-button class="ms-4">
                 {{ __('Register') }}
@@ -67,7 +71,7 @@
     </div>
     </form>
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    /*document.addEventListener('DOMContentLoaded', function() {
         // Récupérer la valeur de 'account_type' de localStorage
         var accountType2 = localStorage.getItem('account_type');
         //alert(accountType2);
@@ -82,7 +86,7 @@
             }
             //alert(element.value);
         }  
-    });
+    });*/
    
     function goToStep1() {
             window.location.replace('\choix-type-compte');

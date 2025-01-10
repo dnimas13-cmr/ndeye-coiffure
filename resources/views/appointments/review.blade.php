@@ -1,6 +1,17 @@
 <x-guest-layout>
     <div class="container">
         <h2>Récapitulatif des informations fournies</h2>
+
+        @if($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
         <ul>
             <li>Lieu: {{ session('appointment.step1.location') }}</li>
             <li>Adresse: {{ session('appointment.step2.address') }}</li>
@@ -15,7 +26,7 @@
             <li>Coiffure Enfant: {{ session('appointment.step5.child_haircut') }}</li>
             <li>Coiffure choisi: {{ session('appointment.step6.haircut_id') }}</li>
         </ul>
-        <form id="reviewForm" action="{{ route('appointments.store') }}" method="POST">
+        <form id="reviewForm" action="{{ route('appointments.review') }}" method="POST">
             @csrf
             <input type="hidden" name="location" value="{{ session('appointment.step1.location') }}">
             <input type="hidden" name="address" value="{{ session('appointment.step2.address') }}">

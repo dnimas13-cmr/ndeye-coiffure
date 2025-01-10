@@ -13,6 +13,7 @@ use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
 
 class AppointmentsController extends Controller
 {
@@ -221,10 +222,91 @@ class AppointmentsController extends Controller
 
     public function traitmentappointment(Request $request) 
     {
-        //il y'aura 2 traitements, le cas où l'utilisateur est connecté et le cas où il n'est pas connecté 
-        //il commence par vérifier si l'user est connecté,si ce n'est pas on le redirige vers la page de création de compte
-        //en enregistrant une session type de compte comme particulier
-        // on récupère et on filtre les données passé en POST
+        if (Auth::check()) {
+            // L'utilisateur est connecté
+            $request->session()->forget('account_type');
+
+            // si la variable de session verifyfirstappointment existe alors on traite plutôt les données en session
+            if($request->session()->get('verifyfirstappointment') && $request->session()->get('verifyfirstappointment') == 1 )
+            {
+                // Construire un tableau à partir des données de session
+            $data = [
+            'location' => $request->session()->get('appointment.step1.location'),
+            'address' => $request->session()->get('appointment.step2.address'),
+            'timing' => $request->session()->get('appointment.step3.timing'),
+            //'otherDetail' => $request->session()->get('appointment.step3.otherDetail'),
+            'date' => $request->session()->get('appointment.step4.date'),
+            'time' => $request->session()->get('appointment.step4.time'),
+            'female_haircut' => $request->session()->get('appointment.step5.female_haircut'),
+            'male_haircut' => $request->session()->get('appointment.step5.male_haircut'),
+            'child_haircut' => $request->session()->get('appointment.step5.child_haircut'),
+            'haircut_id' => $request->session()->get('appointment.step6.haircut_id'),
+            // ajoutez les autres données
+            ];
+
+        // Définir les règles de validation pour chaque donnée
+             $rules = [
+            'location' => 'required',
+            'address' => 'required',
+            'timing' => 'required',
+            'date' => 'required',
+            'time' => 'required',
+            'female_haircut' => 'required',
+            'male_haircut' => 'required',
+            'child_haircut' => 'required',
+            'haircut_id' => 'required',
+            // ajoutez les règles pour les autres données
+            ];
+
+        // Messages d'erreur personnalisés
+            $messages = [
+            'date.required' => 'Le champ data1 est obligatoire.',
+            'location.required' => 'Le champ data2 est obligatoire.',
+            // ajoutez les messages pour les autres champs
+            ]; 
+
+        // Effectuer la validation
+         $validator = Validator::make($data, $rules, $messages);
+
+        if ($validator->fails()) {
+            // Redirection vers une page avec les erreurs de validation
+            return redirect()->route('appointments.review')->withErrors($validator)->withInput();
+            }   
+            } 
+            else 
+            {
+            // si cette variable n'hexiste pas dans ce cas on traite les données envoyé par la requette POST
+            $validatedData = $request->validate([
+                'location' => ['required'],
+                'address' => ['required'],
+                'timing' => ['required'],
+                'date' => ['required'],
+                'time' => ['required'],
+                'female_haircut' => ['required'],
+                'male_haircut' => ['required'],
+                'child_haircut' => ['required'],
+                'haircut_id' => ['required'],
+            ], [
+                'location.required' => 'Le champ nom est obligatoire.',
+                'address.required' => 'Le nom doit être une chaîne de caractères.',
+                'timing.required' => 'Le nom ne peut pas dépasser 255 caractères.',
+                'date.required' => 'L’adresse e-mail est requise.',
+            ]);
+            if ($validator->fails()) {
+                // Redirection vers une page avec les erreurs de validation
+                return redirect()->route('appointments.review')->withErrors($validator)->withInput();
+            }
+            }
+        } else {
+            // L'utilisateur n'est pas connecté
+            $request->session()->put('account_type', 'particulier');
+            $request->session()->put('verifyfirstappointment', 1);
+
+            // Redirection vers la page de création de compte
+            return redirect()->route('register');
+            
+        }
+        
 
         // on appelle la fonction selectbarber pour trier les barbers en fonction des données
 
@@ -240,7 +322,12 @@ class AppointmentsController extends Controller
     // Fonction permettant de filtrer les profils en fonction des données
     public function selectbarber(Request $request) 
     {
+        //on cherche la date de fin en faisant une requete qui recupère le temps de réalisation de la coiffure
 
+        //On fait une requette groupé qui me donne les id des users lorsque la disponibilité dans le tableau est bonne et qu'il propose la coiffure en 
+        //question dans sa table de coiffure
+
+        // ensuite on check les coiffures proposés par le coiffeur
     }
 
     // Fonction permettant de proposer les profil grâce à l'algorithme

@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Barber;
 use App\Models\Customer;
 use App\Models\Recruiter;
+use Illuminate\Support\Facades\Session;
 
 class RegisteredUserController extends Controller
 {
@@ -25,7 +26,11 @@ class RegisteredUserController extends Controller
     {
         return view('auth.register');
     }
-
+    public function handleAjax(Request $request)
+    {
+    $request->session()->put('account_type', $request->account_type); // Stocker dans la session
+    return response()->json(['success' => true]);
+    }
     /**
      * Handle an incoming registration request.
      *
@@ -78,7 +83,13 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
-
+        if($request->session()->get('verifyfirstappointment') && $request->session()->get('verifyfirstappointment') == 1 )
+        {
+            return redirect()->route('appointment.process');
+        } 
+        else 
+        {
         return redirect(route('dashboard', absolute: false));
+        }
     }
 }
