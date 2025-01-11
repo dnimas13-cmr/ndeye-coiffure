@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('id_users')->constrained('users');
             $table->string('listformation')->nullable();
-            $table->string('listkill')->nullable();;
-            $table->string('list_hairstyle')->nullable();
+            $table->string('listkills')->nullable();
+            $table->string('listhairstyles')->nullable();
             $table->longtext('bibliography')->nullable();
             $table->unsignedInteger('year_of_experience')->nullable();
             $table->unsignedInteger('reponse_time')->nullable();

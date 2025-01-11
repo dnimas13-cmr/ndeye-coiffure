@@ -1,57 +1,58 @@
 <x-guest-layout>
+    
     <div class="container">
-        <h2>Quelle coiffure te ferait plaisir ?</h2>
-        <form id="step6Form">
-            @csrf
-            <div class="coiffure-list">
-                <div class="coiffure-item">
-                    <p id="haircut_name_1">ma coiffure 1</p>
-                    <p id="haircut_time_1">10:00</p>
-                    <input type="hidden" value="1" id="id_haircut_1">
-                    <button type="button" onclick="submitStep6(1)" class="choose-haircut">Choisir</button>
-                </div>
-                <div class="coiffure-item">
-                    <p id="haircut_name_2">ma coiffure 2</p>
-                    <p id="haircut_time_2">11:00</p>
-                    <input type="hidden" value="2" id="id_haircut_2">
-                    <button type="button" onclick="submitStep6(2)" class="choose-haircut">Choisir</button>
-                </div>
-            </div>
-            <div id="haircutError"></div>
-            <button type="button" onclick="window.history.back();">Retour</button>
-        </form>
-    </div>
+        <h1>Choisir une coiffure</h1>
+        <div class="hairstyles-container">
+            @foreach ($hairstyles as $hairstyle)
+                <form id="step6Form_{{ $hairstyle->id }}" action="{{ route('appointments.partials.step6') }}" method="POST">
+                    @csrf
+                    <div class="hairstyle">
+                        <h2>{{ $hairstyle->hairstyle_name }}</h2>
+                        @if ($hairstyle->hairstyle_photos)
+                            <img src="{{ asset('storage/' . $hairstyle->hairstyle_photos) }}" alt="Photo de la coiffure">
+                        @endif
+                        <p>Prix: {{ $hairstyle->hairstyle_price }}€</p>
+                        <p>Temps de réalisation: {{ $hairstyle->realisation_time }} minutes</p>
+                        <p>Description: {{ $hairstyle->hairstyle_description }}</p>
+                        <input type="hidden" name="haircut_id" value="{{ $hairstyle->id }}">  
+                        <button type="submit">Choisir cette coiffure</button>
+                        <div id="haircutError_{{ $hairstyle->id }}"></div>
+                    </div>
+                </form>
+            @endforeach
+        </div>
+        <button type="button" onclick="window.history.back();" class="choose-haircut">Retour</button>
     
     <script>
-        function submitStep6(haircutId) {
-            let haircut_id = parseInt(document.getElementById('id_haircut_' + haircutId).value, 10);
-            
-            // Vérification que l'ID est un entier
-            if (!Number.isInteger(haircut_id)) {
-                document.getElementById('haircutError').textContent = 'Erreur système, actualisez la page';
-                return;
-            }
-        
-            fetch('{{ route('appointments.partials.step6') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
-                },
-                body: JSON.stringify({ haircut_id: haircut_id })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = '{{ route('appointments.review') }}';
-                } else {
-                    document.getElementById('haircutError').innerHTML = Object.values(data.errors).join(', ');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('haircutError').textContent = "Erreur lors du traitement de la requête.";
-            });
+      /* function submitStep6(haircutId) {
+    let haircut_id = parseInt(document.getElementById('id_haircut_' + haircutId).value, 10);
+    let errorDiv = document.getElementById('haircutError_' + haircutId);
+
+    if (!Number.isInteger(haircut_id)) {
+        errorDiv.textContent = 'Erreur système, actualisez la page';
+        return;
+    }
+    alert(haircut_id);
+    fetch('{{ route('appointments.partials.step6') }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+        },
+        body: JSON.stringify({ haircut_id: haircut_id })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '{{ route('appointments.review') }}';
+        } else {
+            errorDiv.innerHTML = Object.values(data.errors).join(', ');
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        errorDiv.textContent = "Erreur lors du traitement de la requête.";
+    });
+} */
     </script>
 </x-guest-layout>

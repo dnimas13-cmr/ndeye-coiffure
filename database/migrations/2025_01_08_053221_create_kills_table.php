@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('kills', function (Blueprint $table) {
             $table->id();
             $table->string('kills');
+            $table->string('killsdescription');
             $table->datetime('creation_date');
             $table->timestamps();
         });

@@ -14,6 +14,10 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
+use App\Models\Hairstyle;
+use App\Models\Appointment;
+use App\Models\Barber;
 
 class AppointmentsController extends Controller
 {
@@ -182,26 +186,24 @@ class AppointmentsController extends Controller
     // Messages personnalisés pour chaque type de validation
     $messages = [
         'haircut_id.required' => 'Vous devez choisir une coiffure',
-        'haircut_id.integer' => 'L\'identifiant de la coiffure doit être un entier',
-        'haircut_time.required' => 'Vous devez indiquer une heure pour la coiffure',
-        'haircut_time.regex' => 'Le format du temps n\'est pas bon',
+        //'haircut_id.integer' => 'L\'identifiant de la coiffure doit être un entier',
+
     ];
 
     try {
         // Validation des données reçues
         $validatedData = $request->validate([
-            'haircut_id' => 'required|integer',
-            //'haircut_time' => 'required|regex:/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/',
+            'haircut_id' => 'required',
         ], $messages);
 
         // Stockage des données validées en session
         session(['appointment.step6' => $validatedData]);
-
+        return view('appointments.review');
         // Réponse en cas de succès
-        return response()->json([
-            'success' => true,
+            //return response()->json([
+           // 'success' => true,
             //'message' => 'La coiffure a été programmée avec succès.'
-        ]);
+        //]);
     } catch (\Illuminate\Validation\ValidationException $exception) {
         // Réponse en cas d'erreur de validation
         return response()->json([
@@ -320,14 +322,36 @@ class AppointmentsController extends Controller
 
 
     // Fonction permettant de filtrer les profils en fonction des données
-    public function selectbarber(Request $request) 
+    public function selectBarber($haircut_id, $start_time, $id_user)
     {
-        //on cherche la date de fin en faisant une requete qui recupère le temps de réalisation de la coiffure
+        // Récupérer la coiffure pour obtenir le temps de réalisation
+        $hairstyle = Hairstyle::find($haircut_id);
+        if (!$hairstyle) {
+            return response()->json(['error' => 'Coiffure non trouvée'], 404);
+        }
 
-        //On fait une requette groupé qui me donne les id des users lorsque la disponibilité dans le tableau est bonne et qu'il propose la coiffure en 
-        //question dans sa table de coiffure
+        // Calculer l'heure de fin du rendez-vous
+        $start_time = Carbon::createFromFormat('Y-m-d H:i:s', $start_time);
+        $end_time = (clone $start_time)->addMinutes($hairstyle->realisation_time);
 
-        // ensuite on check les coiffures proposés par le coiffeur
+        // Récupérer les barbiers qui peuvent réaliser la coiffure
+        $barbersWithHairstyle = Barber::where('listhairstyles', 'like', '%' . $haircut_id . '%')->get();
+
+        // Filtrer les barbiers par leur disponibilité
+        $availableBarbers = [];
+        foreach ($barbersWithHairstyle as $barber) {
+            $conflicts = Appointment::where('id_barbers', $barber->id)
+                                    ->where(function($query) use ($start_time, $end_time) {
+                                        $query->whereBetween('appointment_start_time', [$start_time, $end_time])
+                                              ->orWhereBetween('appointment_end_time', [$start_time, $end_time]);
+                                    })->exists();
+
+            if (!$conflicts) {
+                $availableBarbers[] = $barber->id;
+            }
+        }
+
+        return response()->json(['barbiers_disponibles' => $availableBarbers]);
     }
 
     // Fonction permettant de proposer les profil grâce à l'algorithme

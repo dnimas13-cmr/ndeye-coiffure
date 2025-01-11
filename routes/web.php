@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ChoiseController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AppointmentsController;
+use App\Http\Controllers\HairstylesController;
 
 Route::get('/', function () {
     return view('index');
@@ -52,7 +53,8 @@ Route::get('/appointments/partials/step4', [AppointmentsController::class, 'crea
 Route::post('/appointments/partials/step4', [AppointmentsController::class, 'postStep4']);
 Route::get('/appointments/partials/step5', [AppointmentsController::class, 'createStep5'])->name('appointments.partials.step5');
 Route::post('/appointments/partials/step5', [AppointmentsController::class, 'postStep5']);
-Route::get('/appointments/partials/step6', [AppointmentsController::class, 'createStep6'])->name('appointments.partials.step6');
+//Route::get('/appointments/partials/step6', [AppointmentsController::class, 'createStep6'])->name('appointments.partials.step6');
+Route::get('/appointments/partials/step6', [HairstylesController::class, 'createStep6'])->name('appointments.partials.step6');
 Route::post('/appointments/partials/step6', [AppointmentsController::class, 'postStep6']);
 Route::get('/appointments/review', [AppointmentsController::class, 'review'])->name('appointments.review');
 Route::post('/appointments/store', [AppointmentsController::class, 'store'])->name('appointments.store');

@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('hairstyles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_barbers')->constrained('barbers');
             $table->string('hairstyle_name',255);
             $table->unsignedInteger('hairstyle_price');
             $table->string('category')->nullable();;
