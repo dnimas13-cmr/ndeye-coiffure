@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('availabilitys', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_barbers')->constrained('barbers');
-            table->string('day_of_week', 10)->nullable(); // 'Monday', 'Tuesday', etc., pour récurrence hebdomadaire
+            $table->string('day_of_week', 10)->nullable(); // 'Monday', 'Tuesday', etc., pour récurrence hebdomadaire
             $table->datetime('start_time')->nullable();
             $table->datetime('end_time')->nullable();
             $table->boolean('is_recurrent')->default(false);

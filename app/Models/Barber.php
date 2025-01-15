@@ -22,4 +22,24 @@ class Barber extends Model
           'cni_photo',
           'performance_score',
      ];
+      // Relation avec les jours non travaillés
+    public function nonWorkingDays()
+    {
+        // Assurez-vous que le modèle NonWorkingDay est bien lié par une clé étrangère 'id_barbers'
+        return $this->hasMany(NonWorkingDay::class, 'id_barbers');
+    }
+
+    // Relation avec les disponibilités
+    public function availabilitys()
+    {
+        // Assurez-vous que le modèle Availability est bien lié par une clé étrangère 'id_barbers'
+        return $this->hasMany(Availability::class, 'id_barbers');
+    }
+
+    // Relation avec les rendez-vous
+    public function appointments()
+    {
+        // Assurez-vous que le modèle Appointment est bien lié par une clé étrangère 'id_barbers'
+        return $this->hasMany(Appointment::class, 'id_barbers');
+    }
 }

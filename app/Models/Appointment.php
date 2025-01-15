@@ -5,7 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class Appointment extends Model
+
 {
+    protected $table = 'appointments';
     protected $fillable = [
         'id_barbers',
          'hairstyle_name',
@@ -17,4 +19,8 @@ class Appointment extends Model
          'hairstyle_photos',
          'hairstyle_description',
     ];
+    public function barber()
+    {
+        return $this->belongsTo(Barber::class, 'id_barbers');
+    }
 }

@@ -27,8 +27,16 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+        
+        if($request->session()->get('verifyfirstappointment') && $request->session()->get('verifyfirstappointment') == 1 )
+        {
+            return redirect()->route('appointment.process');
+        } 
+        else 
+        {
 
         return redirect()->intended(route('dashboard', absolute: false));
+        }
     }
 
     /**

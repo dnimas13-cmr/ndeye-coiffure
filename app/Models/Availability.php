@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Availability extends Model
 {
+    protected $table = 'availabilitys';
     protected $fillable = [
         'id_barbers',
          'day_of_week',
@@ -14,4 +15,8 @@ class Availability extends Model
          'is_recurrent',
          'specific_date',
     ];
+    public function barber()
+    {
+        return $this->belongsTo(Barber::class, 'id_barbers');
+    }
 }
