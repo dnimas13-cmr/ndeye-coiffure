@@ -4,12 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Kill extends Model
+class Non_working_days extends Model
 {
     protected $fillable = [
-        'kills',
-         'creation_date',
-         'killsdescription',
+        'id_barbers',
+         'specific_days',
+         'reason',   
     ];
-
 }

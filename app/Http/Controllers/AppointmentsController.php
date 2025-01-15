@@ -18,6 +18,10 @@ use Carbon\Carbon;
 use App\Models\Hairstyle;
 use App\Models\Appointment;
 use App\Models\Barber;
+use App\Mail\BarberNotification;
+use Illuminate\Support\Facades\Mail;
+use App\Models\Notification;
+use Illuminate\Support\Facades\Log;
 
 class AppointmentsController extends Controller
 {
@@ -224,6 +228,7 @@ class AppointmentsController extends Controller
 
     public function traitmentappointment(Request $request) 
     {
+        $validatedData = NULL;
         if (Auth::check()) {
             // L'utilisateur est connecté
             $request->session()->forget('account_type');
@@ -232,7 +237,7 @@ class AppointmentsController extends Controller
             if($request->session()->get('verifyfirstappointment') && $request->session()->get('verifyfirstappointment') == 1 )
             {
                 // Construire un tableau à partir des données de session
-            $data = [
+            $validatedData = [
             'location' => $request->session()->get('appointment.step1.location'),
             'address' => $request->session()->get('appointment.step2.address'),
             'timing' => $request->session()->get('appointment.step3.timing'),
@@ -331,58 +336,260 @@ class AppointmentsController extends Controller
         }
 
         // Calculer l'heure de fin du rendez-vous
-        $start_time = Carbon::createFromFormat('Y-m-d H:i:s', $start_time);
-        $end_time = (clone $start_time)->addMinutes($hairstyle->realisation_time);
+        $starTime = Carbon::createFromFormat('Y-m-d H:i:s', $start_time);
+        $endTime = (clone $start_time)->addMinutes($hairstyle->realisation_time);
 
-        // Récupérer les barbiers qui peuvent réaliser la coiffure
-        $barbersWithHairstyle = Barber::where('listhairstyles', 'like', '%' . $haircut_id . '%')->get();
+        // Étape 1: Sélection des barbiers basés sur les hairstyles disponibles
+        $barbersWithHairstyle = Barber::whereRaw("FIND_IN_SET(?, listhairstyles)", [$haircut_id])->get();
 
-        // Filtrer les barbiers par leur disponibilité
-        $availableBarbers = [];
+        $availableBarbers = collect();
+
+        // Étape 2: Vérifier chaque barbier pour les disponibilités et les non-working days
         foreach ($barbersWithHairstyle as $barber) {
-            $conflicts = Appointment::where('id_barbers', $barber->id)
-                                    ->where(function($query) use ($start_time, $end_time) {
-                                        $query->whereBetween('appointment_start_time', [$start_time, $end_time])
-                                              ->orWhereBetween('appointment_end_time', [$start_time, $end_time]);
-                                    })->exists();
+        // Vérifier les non working days
+        $nonWorking = $barber->nonWorkingDays()
+                              ->whereDate('specific_date', $startTime->toDateString())
+                              ->exists();
 
-            if (!$conflicts) {
-                $availableBarbers[] = $barber->id;
-            }
+        if ($nonWorking) {
+            continue;
         }
 
-        return response()->json(['barbiers_disponibles' => $availableBarbers]);
+        // Vérifier les disponibilités
+        $isAvailable = $barber->availabilities()
+                              ->where(function ($query) use ($startTime) {
+                                  $query->where('day_of_week', $startTime->format('l'))
+                                        ->orWhere('specific_date', $startTime->toDateString());
+                              })
+                              ->where('start_time', '<=', $startTime->format('H:i:s'))
+                              ->where('end_time', '>=', $endTime->format('H:i:s'))
+                              ->exists();
+
+        if (!$isAvailable) {
+            continue;
+        }
+
+        // Étape 3: Vérifier les rendez-vous existants
+        $hasAppointment = $barber->appointments()
+                                 ->where('appointment_start_time', '<=', $endTime)
+                                 ->where('appointment_end_time', '>=', $startTime)
+                                 ->exists();
+
+        if (!$hasAppointment) {
+            $availableBarbers->push($barber);
+        }
+     }
+
+        // Retourner la liste des barbiers disponibles
+         return response()->json($availableBarbers);
+    
     }
+    
 
     // Fonction permettant de proposer les profil grâce à l'algorithme
-    public function matchbarber() 
+    public function matchBarber(array $barberIdsJson, $location, $type_address)
     {
-        // on commence par définir l'algorithme
+        // Décode le JSON pour obtenir les ID des barbiers
+        $barberIds = json_decode($barberIdsJson, true);
 
-        // on crée une fonction qui calcule et ajoute le score de chaque profil dans un champ
+        // Constants
+        $NUMBER_OF_POSITIVE_REVIEWS = 40;
+        $LOCATION_ADDRESS = 30;
+        $AVERAGE_RESPONSE_TIME = 20;
+        $NUMBER_OF_MISSION_ACCEPTANCES = 10;
 
-        // on crée une fonction qui envoi les mails à chacun des 5 profils classés
+        // Total number of reviews on the site
+        $site_total_numbers_reviews = Barber::sum('positive_reviews');
 
-        
+        // Prepare array to store scores
+        $barbersScores = [];
+
+        foreach ($barberIds as $id) {
+            $barber = Barber::with('user')->find($id);
+            if (!$barber) continue;
+
+            // Score reviews calculation
+            $numbers_reviews = $barber->positive_reviews;
+            $total_numbers_reviews = $barber->reviews;  // Assuming this attribute exists
+            $score_quality = $numbers_reviews / max($total_numbers_reviews, 1);
+            $score_quantity = $total_numbers_reviews / max($site_total_numbers_reviews, 1);
+            $score_factor = $score_quantity * $score_quality;
+             $score_reviews = NUMBER_OF_POSITIVE_REVIEWS * $score_factor;
+
+            // Location score calculation
+            if ($type_address === "au salon") {
+            $location_final_address = 0; // No distance if service is at the salon
+            } else {
+            $user_location_address = $barber->user->location_address;
+            // Calculate distance using Google Maps API or similar service
+            $location_final_address = $this->calculateDistance($user_location_address, $location);
+            }
+            $location_address_score = $this->determineLocationScore($location_final_address) + LOCATION_ADDRESS;
+
+            // Response time score calculation
+            $reponse_time = $barber->reponse_time ?? 0;
+            $time_reponse_score = $this->determineResponseScore($reponse_time) + AVERAGE_RESPONSE_TIME;
+
+            // Performance score
+            $performance_score = $time_reponse_score + $score_reviews + $location_address_score;
+
+            // Store score
+            $barbersScores[$id] = $performance_score;
+
+            // Update barber's performance score in the database
+            $barber->performance_score = $performance_score;
+            $barber->save();
     }
 
-    public function sendnotification() 
+            // Sort and get top 10 barbers based on performance score
+            arsort($barbersScores);
+            $topBarbers = array_slice(array_keys($barbersScores), 0, 10, true);
+
+            return response()->json([
+            'top_barbers' => Barber::whereIn('id', $topBarbers)->get()
+        ]);
+        }
+
+    public function calculateDistance($origin, $destination)
     {
-        // envoi les notifications emails
+    // Remplacez 'YOUR_API_KEY' par votre clé API Google Maps réelle
+    $apiKey = 'YOUR_API_KEY';
 
-        // envoi les notifications notifs
- 
+    // URL de l'API Google Maps Directions
+    $url = "https://maps.googleapis.com/maps/api/directions/json?origin=" . urlencode($origin) . "&destination=" . urlencode($destination) . "&key=" . $apiKey;
+
+    // Initialiser cURL pour faire une requête HTTP GET
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+    // Exécuter la requête cURL
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    // Décoder la réponse JSON
+    $response = json_decode($response, true);
+
+    // Vérifier si la requête a réussi
+    if (!empty($response['routes'])) {
+        // Récupérer la distance depuis la première route
+        $distance = $response['routes'][0]['legs'][0]['distance']['value'] / 1000;  // Convertir de mètres en kilomètres
+        return $distance;
     }
 
-
-
-    public function store(Request $request) {
-        // Validation finale et création du rendez-vous dans la base de données
-
-        // on crée une fonction qui affiche un bloc
-        Session::forget('appointment'); // Nettoyer la session après la création du rendez-vous
-        return response()->json(['success' => true]);
+    // Retourner 0 si aucune route n'a été trouvée
+    return 0;
     }
+
+    public function determineLocationScore($distance) {
+    if ($distance <= 3) {
+        return 1;
+    } elseif ($distance <= 5) {
+        return 0.8;
+    } elseif ($distance <= 10) {
+        return 0.5;
+    } elseif ($distance <= 15) {
+        return 0.3;
+    } else {
+        return 0.2;
+    }
+    }
+
+    public function determineResponseScore($reponse_time)
+        {
+    // Définir les seuils de temps et les scores associés
+    $timeThresholds = [
+        10 => 1.0,   // Temps de réponse jusqu'à 10 minutes
+        30 => 0.8,   // Temps de réponse de 11 à 30 minutes
+        60 => 0.7,   // Temps de réponse de 31 minutes à 1 heure
+        90 => 0.5,   // Temps de réponse de 1 heure à 1 heure et demie
+        240 => 0.3,  // Temps de réponse de 2 heures à 4 heures
+    ];
+
+    $defaultFactor = 0.1; // Score pour les temps de réponse supérieurs à 4 heures
+
+    // Itérer à travers les seuils pour déterminer le score
+    foreach ($timeThresholds as $threshold => $score) {
+        if ($reponse_time <= $threshold) {
+            return $score;
+        }
+    }
+
+    // Si aucun seuil n'est satisfait, retourner le facteur par défaut
+    return $defaultFactor;
+        }
+
+        public function sendNotification($barberIdsJson, $currentUser)
+{
+    $barberIds = json_decode($barberIdsJson, true);
+    $users = User::whereIn('id', $barberIds)->get();
+
+    $message = 'Vous avez reçu de demande de coiffure sur notre site web, merci de venir confirmer la demande le plus tôt possible.';
+
+    foreach ($users as $user) {
+        if (!filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+            Log::info("Invalid email address for user: {$user->id}");
+            continue;
+        }
+
+        try {
+            // Envoi de l'email
+            Mail::to($user->email)->queue(new BarberNotification($message));
+
+            // Enregistrement de la notification dans la base de données
+            $notification = new Notification([
+                'id_users' => $currentUser->id,
+                'message' => $message
+            ]);
+            $notification->save();
+        } catch (\Exception $e) {
+            Log::error("Failed to send email or save notification for user {$user->id}: " . $e->getMessage());
+        }
+    }
+}
+
+
+public function store($validatedData, $barberIds)
+{
+    // Assumer que $validatedData est un tableau avec les clés nécessaires
+    //$userId = session('user_id');  // Obtenir l'ID de l'utilisateur connecté stocké dans la session
+
+    // Trouver les informations du hairstyle
+    $hairstyle = Hairstyle::find($validatedData['haircut_id']);
+    if (!$hairstyle) {
+        return response()->json(['error' => 'Hairstyle not found'], 404);
+    }
+
+    // Calculer les temps de début et de fin du rendez-vous
+    $startTime = new Carbon($validatedData['date'] . ' ' . $validatedData['time']);
+    $endTime = (clone $startTime)->addMinutes($hairstyle->realisation_time);
+
+    // Créer le rendez-vous
+    $appointment = new Appointment([
+        'id_customers' => Auth::id(),
+        'id_hairstyles' => $validatedData['haircut_id'],
+        'id_barbers' => null, // Ce champ pourrait être omis ou utilisé différemment selon le modèle de données
+        'appointment_start_time' => $startTime,
+        'appointment_end_time' => $endTime,
+        'appointment_adress' => $validatedData['address'],
+        'type_adress' => $validatedData['location'],
+        'person_type' => $validatedData['person_type'],
+        'number_of_people_to_do_hair' => $validatedData['number_of_people'],
+        'price' => $hairstyle->hairstyle_price,
+        'status' => 'no-validate',
+        'selected_profile' => json_encode($barberIds)
+    ]);
+
+    $appointment->save();
+
+    // Envoi d'une réponse de succès
+    return response()->json([
+        'success' => true,
+        'message' => 'Appointment successfully created',
+        'appointmentId' => $appointment->id
+    ]);
+}
 
     public function message(User $id_user) {
         
@@ -391,12 +598,36 @@ class AppointmentsController extends Controller
         
     }
 
-    public function updatestatus(User $id_user) {
-        
-
-        // fonction qui va permettre de changer le statut du rendez-vous et ajouter un coiffeur au rendez-vous
-        // ensuite il appelle la fonction notification pour envoyer les mails au 2
-        
+    public function updateStatus($id_user)
+{
+    // Assurer que l'utilisateur est connecté
+    if (!Auth::check()) {
+        return response()->json(['error' => 'User not authenticated'], 401);
     }
+
+    // Récupérer l'ID de l'utilisateur connecté
+    $currentUserId = Auth::id();
+
+    // Récupérer tous les rendez-vous pour cet utilisateur
+    $appointments = Appointment::where('id_customers', $id_user)->get();
+
+    // Vérifier s'il y a des rendez-vous à mettre à jour
+    if ($appointments->isEmpty()) {
+        return response()->json(['error' => 'No appointments found for this user.'], 404);
+    }
+
+    // Mettre à jour le statut de chaque rendez-vous à 'pending' et définir le barbier
+    foreach ($appointments as $appointment) {
+        $appointment->update([
+            'status' => 'pending',
+            'id_barbers' => $currentUserId // Ajouter l'ID de l'utilisateur connecté en tant que barbier
+        ]);
+    }
+
+    // Retourner une réponse de succès
+    return response()->json([
+        'success' => 'Appointment status and barber updated successfully for user ID: ' . $id_user
+    ], 200);
+}
 }
 

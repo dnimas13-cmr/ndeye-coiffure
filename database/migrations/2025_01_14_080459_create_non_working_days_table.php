@@ -11,16 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('availabilitys', function (Blueprint $table) {
+        Schema::create('non_working_days', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_barbers')->constrained('barbers');
-            table->string('day_of_week', 10)->nullable(); // 'Monday', 'Tuesday', etc., pour récurrence hebdomadaire
-            $table->datetime('start_time')->nullable();
-            $table->datetime('end_time')->nullable();
-            $table->boolean('is_recurrent')->default(false);
-            $table->datetime('specific_date')->nullable();
+            $table->unsignedInteger('specific_days')->nullable();
+            $table->string('reason')->nullable();
             $table->timestamps();
-            
         });
     }
 
@@ -29,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('availabilitys');
+        Schema::dropIfExists('non_working_days');
     }
 };
