@@ -18,19 +18,20 @@
         <div class="sidebar">
             <ul>
                 <li onclick="changeContent('dashboard')">Tableau de bord</li>
-                <li onclick="changeContent('appointments')">Mes rendez-vous</li>
+                <li><a href="/dashboard-appointments">Mes rendez-vous</a></li>
                 <li onclick="changeContent('courses')">Mes cours</li>
                 <li onclick="changeContent('messages')">Mes messages</li>
             </ul>
         </div>
         <div class="content">
             <div id="dashboard" class="content-section">
+             
                 <h1>Tableau de bord</h1>
                 <p>Contenu du tableau de bord...</p>
+            
             </div>
             <div id="appointments" class="content-section" style="display:none;">
-                <h1>Mes rendez-vous</h1>
-                <p>Contenu des rendez-vous...</p>
+                @yield('appointments')
             </div>
             <div id="courses" class="content-section" style="display:none;">
                 <h1>Mes cours</h1>
@@ -44,18 +45,33 @@
     </div>
 
     <script>
+        // Fonction pour changer le contenu affiché
         function changeContent(contentType) {
-    // Hide all content sections
-    document.querySelectorAll('.content-section').forEach(function(section) {
-        section.style.display = 'none';
-    });
+            // Cacher toutes les sections de contenu
+            document.querySelectorAll('.content-section').forEach(function(section) {
+                section.style.display = 'none';
+            });
 
-    // Show the selected content section
-    const selectedSection = document.getElementById(contentType);
-    if (selectedSection) {
-        selectedSection.style.display = 'block';
-    }
-}
+            // Afficher la section choisie
+            const selectedSection = document.getElementById(contentType);
+            if (selectedSection) {
+                selectedSection.style.display = 'block';
+            }
+        }
 
-        </script>
+        // Fonction pour charger les rendez-vous dans la div 'appointments'
+        function loadAppointments() {
+            fetch('{{ route('dashboard-appointment') }}') // Cette route va charger la vue des rendez-vous
+                .then(response => response.text())
+                .then(html => {
+                    // Injecter le contenu de la vue dans la div 'appointments'
+                    document.getElementById('appointments').innerHTML = html;
+                    document.getElementById('appointments').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Une erreur est survenue lors du chargement des rendez-vous:', error);
+                    alert('Une erreur est survenue lors du chargement des données.');
+                });
+        }
+    </script>
 </x-app-layout>

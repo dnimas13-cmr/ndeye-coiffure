@@ -5,11 +5,12 @@ use App\Http\Controllers\ChoiseController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AppointmentsController;
 use App\Http\Controllers\HairstylesController;
+use App\Http\Controllers\DashboardAppointmentController;
 
 Route::get('/', function () {
     return view('index');
 });
-
+//Route::get('/dashboard', [DashboardAppointmentController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -61,3 +62,8 @@ Route::post('/appointments/store', [AppointmentsController::class, 'store'])->na
 
 Route::get('/appointment-process', [AppointmentsController::class, 'traitmentappointment'])->name('appointment.process');
 Route::post('/appointments/review', [AppointmentsController::class, 'traitmentappointment']);
+
+// dashboard affichage
+Route::get('/dashboard-appointments', [DashboardAppointmentController::class, 'appointmentlink'])->name('dashboard-appointment');
+Route::get('/details-appointment/{id}', [DashboardAppointmentController::class, 'details'])->name('details-appointment');
+Route::get('/validate-appointment/{id}', [AppointmentsController::class, 'updateStatus'])->name('validate-appointment');

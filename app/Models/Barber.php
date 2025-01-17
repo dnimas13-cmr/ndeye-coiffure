@@ -12,8 +12,8 @@ class Barber extends Model
      protected $fillable = [
          'id_users',
           'listformation',
-          'listkill',
-          'list_hairstyle',
+          'listkills',
+          'listhairstyles',
           'bibliography',
           'year_of_experience',
           'reponse_time',

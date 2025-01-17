@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('day_of_week', 10)->nullable(); // 'Monday', 'Tuesday', etc., pour récurrence hebdomadaire
             $table->datetime('start_time')->nullable();
             $table->datetime('end_time')->nullable();
-            $table->boolean('is_recurrent')->default(false);
+            $table->boolean('is_recurrent')->default(true);
             $table->datetime('specific_date')->nullable();
             $table->timestamps();
             

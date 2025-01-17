@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('id_customers')->constrained('customers');
             $table->foreignId('id_hairstyles')->constrained('hairstyles');
-            $table->foreignId('id_barbers')->constrained('barbers');
-            $table->datetime('appointment_start_time');
-            $table->datetime('appointment_end_time');
+            $table->foreignId('id_barbers')->constrained('barbers')->nullable();
+            $table->time('appointment_start_time');
+            $table->time('appointment_end_time');
             $table->text('appointment_adress');
             $table->string('type_adress',255);
             $table->string('person_type',255);

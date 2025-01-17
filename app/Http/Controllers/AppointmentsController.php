@@ -21,7 +21,7 @@ use App\Models\Barber;
 use App\Mail\BarberNotification;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Notification;
-use App\Models\Non_working_day;
+use App\Models\NonWorkingDay;
 use Illuminate\Support\Facades\Log;
 
 class AppointmentsController extends Controller
@@ -232,6 +232,7 @@ class AppointmentsController extends Controller
         $validatedData = NULL;
         $totalbabers = NULL;
         $matchTotalBarber = NULL;
+        $validator = NULL;
         if (Auth::check()) {
             // L'utilisateur est connecté
             $request->session()->forget('account_type');
@@ -316,82 +317,146 @@ class AppointmentsController extends Controller
             return redirect()->route('login');
             
         }
-        $dateTimeString = $validatedData['date'] . ' ' . $validatedData['time'];
+        $dateTimeString = $validatedData['date'] . ' ' . $validatedData['time'] . ':00';
         //dd($dateTimeString);
-        $dateTime = Carbon::createFromFormat('Y-m-d H:i', $dateTimeString);
+        $formattedDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $dateTimeString);
 
-        $barber = $this->selectBarber($validatedData['haircut_id'], $dateTime);
-        dd($totalbabers);
-        $barberfilter = $this->matchBarber($totalbabers, $validatedData['address'], $validatedData['location']);
-        $notif = $this->sendNotification($matchTotalBarber);
-        $saved = $this->store($validatedData, $matchTotalBarber);
+        $barber = $this->selectBarber($validatedData['haircut_id'], $formattedDateTime);
+        //dd($barber);
+        //$barberfilter = $this->matchBarber($barber, $validatedData['address'], $validatedData['location']);
+        $notif = $this->sendNotification($barber);
+        $saved = $this->store($validatedData, $barber);
     }
 
 
     // Fonction permettant de filtrer les profils en fonction des données
     public function selectBarber($haircut_id, $start_time)
     {
-        // Récupérer la coiffure pour obtenir le temps de réalisation
         $hairstyle = Hairstyle::find($haircut_id);
         if (!$hairstyle) {
             return response()->json(['error' => 'Coiffure non trouvée'], 404);
         }
-
-        // Calculer l'heure de fin du rendez-vous
-        $starTime = $start_time;
-        //dd($starTime);
-        //dd($start_time);
+    
         $endTime = (clone $start_time)->addHours($hairstyle->realisation_time);
-
+        $dayOfWeek = $start_time->format('l');
+        //dd($dayOfWeek);
+        //dd($start_time->format('H:i:s'));
         // Étape 1: Sélection des barbiers basés sur les hairstyles disponibles
-        $barbersWithHairstyle = Barber::whereRaw("FIND_IN_SET(?, listhairstyles)", [$haircut_id])->get();
-
+        $barbersWithHairstyle = Barber::whereRaw("FIND_IN_SET(?, listhairstyles) > 0", [$haircut_id])->pluck('id');
+        //dd($barbersWithHairstyle);
+        if ($barbersWithHairstyle->isEmpty()) {
+            //dump('Aucun barber avec le hairstyle spécifié');
+        }
+    
         $availableBarbers = collect();
-
+    
         // Étape 2: Vérifier chaque barbier pour les disponibilités et les non-working days
-        foreach ($barbersWithHairstyle as $barber) {
-        // Vérifier les non working days
-        $nonWorking = $barber->nonWorkingDays()
-                              ->whereDate('specific_days', $start_time->toDateString())
-                              ->exists();
+        foreach ($barbersWithHairstyle as $barberId) {
+            $barber = Barber::find($barberId);
+    
+            // Vérifier les jours non travaillés
+            $nonWorking = $barber->nonWorkingDays()->where('id_barbers', $barberId)
+                                       ->whereDate('specific_days', $start_time->toDateString())
+                                       ->exists();
+    
+            if ($nonWorking) {
+               // dump('Barber ' . $barberId . ' est non disponible aujourd’hui');
+                continue;
+            }
+    
+            // Vérifier les disponibilités
+           /* try {
+            $isAvailable = $barber->availabilitys()
+    ->where('id_barbers', $barberId)
+    ->where(function ($query) use ($dayOfWeek, $start_time, $endTime) {
+        // Vérifier les disponibilités récurrentes correspondant au jour de la semaine
+        $query->where(function ($subQuery) use ($dayOfWeek, $start_time, $endTime) {
+            $subQuery->where('day_of_week', $dayOfWeek)
+                     ->where('is_recurrent', true)
+                     ->whereTime('start_time', '>=', $start_time->format('H:i:s')) // Heure de début de disponibilité doit précéder ou être égale à l'heure de début du service
+                     ->whereTime('end_time', '<=', $endTime->format('H:i:s')); // Heure de fin de disponibilité doit suivre ou être égale à l'heure de fin du service
+                     
+                    })
 
-        if ($nonWorking) {
-            continue;
+    
+        // Ou vérifier si une date spécifique est définie et si les heures correspondent
+        ->orWhere(function ($subQuery) use ($start_time, $endTime) {
+            $subQuery->whereDate('specific_date', $start_time->toDateString())
+                     ->whereTime('start_time', '>=', $start_time->format('H:i:s'))
+                     ->whereTime('end_time', '<=', $endTime->format('H:i:s'));
+                     
+                    });
+    })
+    ->exists();
+    } catch (\Exception $e) {
+    // Capturer et loguer toute autre erreur
+    report($e);
+    $errorMessage = 'Une erreur est survenue : ' . $e->getMessage();
+    // Stocker ou retourner l'erreur
+    dd($errorMessage);
+    return response()->json(['error' => $errorMessage], 500);
+   
+    } 
+    $startTimeFormatted = $start_time->format('H:i:s');
+    $endTimeFormatted = $endTime->format('H:i:s');
+    $startDateFormatted = $start_time->format('Y-m-d');
+    $query = "
+    SELECT EXISTS (
+        SELECT 1 FROM `availabilitys`
+        WHERE `id_barbers` = ?
+        AND (
+            (
+                `day_of_week` = ?
+                AND `is_recurrent` = 1
+                AND TIME(`start_time`) <= ?
+                AND TIME(`end_time`) >= ?
+            )
+            OR (
+                DATE(`specific_date`) = ?
+                AND TIME(`start_time`) <= ?
+                AND TIME(`end_time`) >= ?
+            )
+        )
+    ) AS `is_available`;
+";
+
+$isAvailable = DB::select($query, [
+    $barberId, 
+    $dayOfWeek, 
+    $startTimeFormatted, 
+    $endTimeFormatted,
+    $startDateFormatted,
+    $startTimeFormatted, 
+    $endTimeFormatted
+]);
+dd($isAvailable);
+            if (!$isAvailable) {
+               
+                dump('Barber ' . $barberId . ' n’a pas de disponibilité à ce moment');
+                continue;
+            } */
+    
+            // Étape 3: Vérifier les rendez-vous existants
+            $hasAppointment = $barber->appointments()->where('id_barbers', $barberId)
+                                         ->where('appointment_start_time', '<=', $start_time->format('H:i:s'))
+                                         ->where('appointment_end_time', '>=', $endTime->format('H:i:s'))
+                                         ->exists();
+    
+            if ($hasAppointment) {
+                //dump('Barber ' . $barberId . ' a déjà un rendez-vous programmé');
+                continue;
+            }
+    
+            $availableBarbers->push($barberId);
         }
-
-        // Vérifier les disponibilités
-        $isAvailable = $barber->availabilitys()
-                              ->where(function ($query) use ($start_time) {
-                                  $query->where('day_of_week', $start_time->format('l'))
-                                        ->orWhere('specific_date', $start_time->toDateString());
-                              })
-                              ->where('start_time', '<=', $start_time->format('H:i:s'))
-                              ->where('end_time', '>=', $endTime->format('H:i:s'))
-                              ->exists();
-
-        if (!$isAvailable) {
-            continue;
-        }
-
-        // Étape 3: Vérifier les rendez-vous existants
-        $hasAppointment = $barber->appointments()
-                                 ->where('appointment_start_time', '<=', $endTime)
-                                 ->where('appointment_end_time', '>=', $$start_time)
-                                 ->exists();
-
-        if (!$hasAppointment) {
-            $availableBarbers->push($barber);
-        }
-     }
-
-        // Retourner la liste des barbiers disponibles
-         return response()->json($availableBarbers);
-         $totalbabers = $availableBarbers;
+    
+        //dump('Barbiers disponibles:', $availableBarbers);
+        return response()->json($availableBarbers);
     }
     
 
     // Fonction permettant de proposer les profil grâce à l'algorithme
-    public function matchBarber(array $barberIdsJson, $location, $type_address)
+    public function matchBarber($barberIdsJson, $location, $type_address)
     {
         // Décode le JSON pour obtenir les ID des barbiers
         $barberIds = json_decode($barberIdsJson, true);
@@ -530,27 +595,35 @@ class AppointmentsController extends Controller
     return $defaultFactor;
         }
 
-        public function sendNotification($barberIdsJson)
+public function sendNotification($barberIdsJson)
 {
-    $barberIds = json_decode($barberIdsJson, true);
+    $barberIds = json_decode($barberIdsJson->content(), true);
     $users = User::whereIn('id', $barberIds)->get();
-
+    
     $message = 'Vous avez reçu de demande de coiffure sur notre site web, merci de venir confirmer la demande le plus tôt possible.';
 
+    Log::info('Starting email sending process.');
     foreach ($users as $user) {
         if (!filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
             Log::info("Invalid email address for user: {$user->id}");
             continue;
         }
-
+        Log::info("Processing user: {$user->email}");
+        
         try {
             // Envoi de l'email
             Mail::to($user->email)->queue(new BarberNotification($message));
-
+           /* Mail::send([], [], function ($message) use ($user) {
+                $message->to($user->email)
+                        ->from('no_reply@ndeye-coiffure.fr')
+                        ->subject('Confirmation de la validation du rendez-vous')
+                        ->setBody('Bravo, vous avez maintenant validé le rendez-vous, merci de consulter les détails du rendez-vous');
+            });*/
+            Log::info("Email sent to {$user->email}");
             // Enregistrement de la notification dans la base de données
             $notification = new Notification([
                 'id_users' => $user->id,
-                'message' => $message
+                'notification_content' => $message
             ]);
             $notification->save();
         } catch (\Exception $e) {
@@ -560,56 +633,59 @@ class AppointmentsController extends Controller
 }
 
 
-public function store($validatedData, $barberIds)
+public function store($validatedData, $barberIds2)
 {
     // Assumer que $validatedData est un tableau avec les clés nécessaires
     //$userId = session('user_id');  // Obtenir l'ID de l'utilisateur connecté stocké dans la session
-
+    $barberIds = json_decode($barberIds2->content(), true);
+    $barberIdsString = implode(',', $barberIds);
     // Trouver les informations du hairstyle
     $hairstyle = Hairstyle::find($validatedData['haircut_id']);
     if (!$hairstyle) {
         return response()->json(['error' => 'Hairstyle not found'], 404);
     }
-
+    //dd($validatedData);
     // Calculer les temps de début et de fin du rendez-vous
-    $startTime = new Carbon($validatedData['date'] . ' ' . $validatedData['time']);
-    $endTime = (clone $startTime)->addHours($hairstyle->realisation_time);
+    //$validatedData['date'] . ' ' . $validatedData['time'] . ':00';
+    $start_time = new Carbon($validatedData['date'] . ' ' . $validatedData['time'] .':00');
+    $end_time = (clone $start_time)->addHours($hairstyle->realisation_time);
+
+    $startTime = $start_time->format('H:i:s');
+    $endTime = $end_time->format('H:i:s');
+    $id_customer = Auth::id();
+    //dd($id_customer);
 
     // Créer le rendez-vous
     $appointment = new Appointment([
-        'id_customers' => Auth::id(),
+        'id_customers' => $id_customer,
         'id_hairstyles' => $validatedData['haircut_id'],
         'id_barbers' => null, // Ce champ pourrait être omis ou utilisé différemment selon le modèle de données
         'appointment_start_time' => $startTime,
         'appointment_end_time' => $endTime,
         'appointment_adress' => $validatedData['address'],
         'type_adress' => $validatedData['location'],
-        'person_type' => $validatedData['person_type'],
-        'number_of_people_to_do_hair' => $validatedData['number_of_people'],
+        'person_type' => NULL,
+        'number_of_people_to_do_hair' => NULL,
         'price' => $hairstyle->hairstyle_price,
         'status' => 'wainting',
-        'selected_profile' => json_encode($barberIds)
+        'selected_profile' => $barberIdsString
     ]);
 
     $appointment->save();
-    $request->session()->forget('verifyfirstappointment');
-    $request->session()->forget('appointment.step1.location');
-    $request->session()->forget('appointment.step2.address');
-    $request->session()->forget('appointment.step3.timing');
-    $request->session()->forget('appointment.step3.otherDetail');
-    $request->session()->forget('appointment.step4.date');
-    $request->session()->forget('appointment.step4.time');
-    $request->session()->forget('appointment.step5.female_haircut');
-    $request->session()->forget('appointment.step5.male_haircut');
-    $request->session()->forget('appointment.step5.child_haircut');
-    $request->session()->forget('appointment.step6.haircut_id');
+    Session::forget('verifyfirstappointment');
+    Session::forget('appointment.step1.location');
+    Session::forget('appointment.step2.address');
+    Session::forget('appointment.step3.timing');
+    Session::forget('appointment.step3.otherDetail');
+    Session::forget('appointment.step4.date');
+    Session::forget('appointment.step4.time');
+    Session::forget('appointment.step5.female_haircut');
+    Session::forget('appointment.step5.male_haircut');
+    Session::forget('appointment.step5.child_haircut');
+    Session::forget('appointment.step6.haircut_id');
 
-    // Envoi d'une réponse de succès
-    return response()->json([
-        'success' => true,
-        'message' => 'Appointment successfully created',
-        'appointmentId' => $appointment->id
-    ]);
+    return redirect(route('dashboard', absolute: false));
+    
 }
 
     public function message(User $id_user) {
@@ -633,13 +709,13 @@ public function store($validatedData, $barberIds)
         $appointment->save();
     
         // Envoi d'email et notification au barber (utilisateur actuel)
-        Mail::send([], [], function ($message) use ($currentUser) {
+       
+        /*Mail::send([], [], function ($message) use ($currentUser) {
             $message->to($currentUser->email)
-                    ->from('no_reply@ndeye-coiffure.fr')
-                    ->subject('Confirmation de la validation du rendez-vous')
-                    ->setBody('Bravo, vous avez maintenant validé le rendez-vous, merci de consulter les détails du rendez-vous');
-        });
-    
+                    ->subject('Confirmation de votre rendez-vous')
+                    ->text('Bravo, un coiffeur vient de valider votre votre rendez-vous, vous pouvez maintenant entrer en contact avec lui via la messagerie interne');
+        }); */
+        //dd( $currentUser);
         // Création de la notification pour le barber
         $notification = new Notification([
             'id_users' => $currentUser->id,
@@ -649,13 +725,12 @@ public function store($validatedData, $barberIds)
     
         // Envoi d'email et notification au client
         $customer = User::findOrFail($appointment->id_customers);
-        Mail::send([], [], function ($message) use ($customer) {
+        /*Mail::send([], [], function ($message) use ($customer) {
             $message->to($customer->email)
-                    ->from('no_reply@ndeye-coiffure.fr')
                     ->subject('Confirmation de votre rendez-vous')
-                    ->setBody('Bravo, un coiffeur vient de valider votre votre rendez-vous, vous pouvez maintenant entrer en contact avec lui via la messagerie interne');
-        });
-    
+                    ->text('Bravo, un coiffeur vient de valider votre votre rendez-vous, vous pouvez maintenant entrer en contact avec lui via la messagerie interne');
+        });*/
+       
         // Création de la notification pour le client
         $notification = new Notification([
             'id_users' => $customer->id,
@@ -663,7 +738,7 @@ public function store($validatedData, $barberIds)
         ]);
         $notification->save();
     
-        return response()->json(['success' => 'Appointment confirmed and notifications sent']);
+        return redirect()->route('dashboard-appointment');
     }
    
     
