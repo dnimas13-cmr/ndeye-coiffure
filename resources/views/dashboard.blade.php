@@ -18,7 +18,7 @@
         <div class="sidebar">
             <ul>
                 <li onclick="changeContent('dashboard')">Tableau de bord</li>
-                <li><a href="/dashboard-appointments">Mes rendez-vous</a></li>
+                <li><a href="/dashboard/mes-reservations">Mes rendez-vous</a></li>
                 <li onclick="changeContent('courses')">Mes cours</li>
                 <li onclick="changeContent('messages')">Mes messages</li>
             </ul>
@@ -61,7 +61,7 @@
 
         // Fonction pour charger les rendez-vous dans la div 'appointments'
         function loadAppointments() {
-            fetch('{{ route('dashboard-appointment') }}') // Cette route va charger la vue des rendez-vous
+            fetch({{ route('mes-reservations') }}) // Cette route va charger la vue des rendez-vous
                 .then(response => response.text())
                 .then(html => {
                     // Injecter le contenu de la vue dans la div 'appointments'

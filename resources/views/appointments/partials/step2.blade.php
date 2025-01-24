@@ -1,14 +1,33 @@
-<x-guest-layout>
-    <div class="container">
-        <h2>À quelle adresse aura lieu votre rendez-vous ?</h2>
-        <form id="step2Form">
-            @csrf
-            <input type="text" id="address" name="address" required>
-            <button type="button" onclick="submitStep2()">Suivant</button>
-            <button type="button" onclick="window.history.back();">Retour</button>
-            <div id="errorAddress"></div>
+@extends('layouts.app')
+
+@section('title', 'RDV Particuliers - Etape 2')
+@section('content')
+    <div class='rdv-step-particulier step-1 d-flex'>
+        <div class='step-container left-step'>
+            <div class='bg-shadow'>
+                <h4>{{ __('Where will your appointment take place?') }}</h4>
+                <form id="step2Form">
+                    @csrf
+                <div class='custom-control mb-4'>
+                    <label class="custom-control-label-text">{{ __('To my address') }}*</label>
+                    <div class='input-step'><img src="{{ asset('img/icons/MapPin.png') }}"><input type='text' class="custom-control-input" id="address" name='address' placeholder="{{ __('Your address') }}" required> </div>
+                </div>
+            </div>
+            <div class='btn-step mt-4 d-flex'>
+                <a href="{{route('appointments.partials.step1')}}" class='btn-step btn-sec'>{{ __('Previous') }}</a>
+                <a href="#" onclick="submitStep2()" class='btn-step btn-pri'>{{ __('Next') }}</a>
+            </div>
         </form>
+        </div>
+        <div class='step-container right-step'>
+            <div class='bg-shadow'>
+                <h4 class='text-center'>{{ __('Summary') }}</h4>
+                <p class='d-flex'><img src="{{ asset('img/icons/MapPinColor.png') }}" class='icon-step'> <span>{{ __('At my address') }}</span></p>
+            </div>
+        </div>
     </div>
+  
+    
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDeKORSeUf85fccSR43YcjwvVJIuS0mYbc&libraries=places&callback=initAutocomplete" async defer></script>
     <script>
     function initAutocomplete() {
@@ -56,5 +75,8 @@
         });
     }
     </script>
+    
+@endsection
 
-</x-guest-layout>
+
+    

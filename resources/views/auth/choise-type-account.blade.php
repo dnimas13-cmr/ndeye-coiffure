@@ -1,22 +1,42 @@
-<x-guest-layout>
-    @section('title', __('inscription'))
+@extends('layouts.app')
+@section('title', 'Vous êtes ? - Ndeye coiffure')
+@section('content')
 
-   
-    <form method="POST" action="">
-        @csrf
 
-        <!-- Étape 1 : Choix du type de compte -->
-        <div id="step1">
-            <select name="account_type" id="accountTypeSelect" required>
-                <option value="">Choisir le type de compte...</option>
-                <option value="particulier">Particulier</option>
-                <option value="coiffeur_affilie">Coiffeur Affilié</option>
-                <option value="recruteur">Recruteur</option>
+    <div class='civilite-user mt-4'>
+        <div class='bg-shadow'>
+            <h4 class='text-center'>{{ __('Vous êtes :') }}</h4>
+            <p class='mt-4 text-center'>Lorem ipsum dolor sit amet adipiscing elit.</p>
+            <div id="step1">
+            <form method="POST" action="">
+                    @csrf
+            <div class='mt-4 choix-civilite'>
+                <select name="account_type" id="accountTypeSelect" required>
+                <label class="checkbox-label">
+                    <option name="option1" class="checkbox-input" value ="Particulier">
+                    <span class="checkbox-text btn-ndeye pri">Particulier</span>
+                </label>
+                <label class="checkbox-label">
+                    <option name="option2" class="checkbox-input" value="Coiffeur Affilié">
+                    <span class="checkbox-text btn-ndeye pri">Coiffeur Affilié</span>
+                </label>
+                <label class="checkbox-label">
+                    <option name="option3" class="checkbox-input" value="Recruteur">
+                    <span class="checkbox-text btn-ndeye pri">Recruteur</span>
+                </label>
             </select>
+            </div>
             <span id="error-message" style="color:red; display:none;">Veuillez choisir un type de compte.</span>
-            <button type="button" onclick="goToStep2()">Suivant</button>
+            <div class='btn-step mt-4 d-flex justify-content-end'>
+            <button type="button" onclick="goToStep2()" class='btn-step btn-sec'>{{ __('Next') }}</button>
+            </div>
+        </form>
         </div>
-</form>
+        
+    
+        </div>
+    </div>
+
 <script>
     function goToStep2() {
         var selectElement = document.getElementById('accountTypeSelect');
@@ -60,4 +80,6 @@
         }
     }
 </script>
-</x-guest-layout>
+
+
+@endsection

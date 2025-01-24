@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('appointments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_customers')->constrained('customers');
+            $table->foreign('id_customers')->references('id')->on('users')->onDelete('cascade'); // Suppression en cascade
             $table->foreignId('id_hairstyles')->constrained('hairstyles');
-            $table->foreignId('id_barbers')->constrained('barbers')->nullable();
+            $table->foreignId('id_barbers')->references('id')->on('users')->onDelete('cascade')->nullable();
             $table->time('appointment_start_time');
             $table->time('appointment_end_time');
             $table->text('appointment_adress');

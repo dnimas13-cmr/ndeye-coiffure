@@ -40,7 +40,7 @@ class AppointmentsController extends Controller
         try {
 
         $validatedData = $request->validate([
-            'location' => 'required|in:A mon adresse,au salon',
+            'location' => 'required|in:A mon adresse,Au salon',
         ], $messages);
         //dd($validatedData);
         session(['appointment.step1' => $validatedData]);
@@ -163,9 +163,9 @@ class AppointmentsController extends Controller
     ];
     try {
     $validatedData = $request->validate([
-        'female_haircut' => 'required|integer|min:0',
-        'male_haircut' => 'required|integer|min:0',
-        'child_haircut' => 'required|integer|min:0',
+        'female_haircut' => 'nullable',
+        'male_haircut' => 'nullable',
+        'child_haircut' => 'nullable',
     ]);
 
     session(['appointment.step5' => $validatedData]);
@@ -191,7 +191,8 @@ class AppointmentsController extends Controller
     // Messages personnalisés pour chaque type de validation
     $messages = [
         'haircut_id.required' => 'Vous devez choisir une coiffure',
-        //'haircut_id.integer' => 'L\'identifiant de la coiffure doit être un entier',
+        'haircut_name.required' => 'Le nom de la coiffure est requis',
+        'haircut_price' => 'le prix de la coiffure est requis',
 
     ];
 
@@ -199,6 +200,9 @@ class AppointmentsController extends Controller
         // Validation des données reçues
         $validatedData = $request->validate([
             'haircut_id' => 'required',
+            'haircut_name' => 'required',
+            'haircut_price' => 'required',
+            
         ], $messages);
 
         // Stockage des données validées en session
@@ -233,6 +237,7 @@ class AppointmentsController extends Controller
         $totalbabers = NULL;
         $matchTotalBarber = NULL;
         $validator = NULL;
+        $saved = NULL;
         if (Auth::check()) {
             // L'utilisateur est connecté
             $request->session()->forget('account_type');
@@ -255,6 +260,64 @@ class AppointmentsController extends Controller
             // ajoutez les autres données
             ];
 
+          // Définir les règles de validation pour chaque donnée
+             $rules = [
+            'location' => 'required',
+            'address' => 'required',
+            'timing' => 'required',
+            'date' => 'required',
+            'time' => 'required',
+            'female_haircut' => 'nullable',
+            'male_haircut' => 'nullable',
+            'child_haircut' => 'nullable',
+            'haircut_id' => 'required',
+            // ajoutez les règles pour les autres données
+            ];
+
+            // Messages d'erreur personnalisés
+            $messages = [
+            'date.required' => 'Le champ data1 est obligatoire.',
+            'location.required' => 'Le champ data2 est obligatoire.',
+            // ajoutez les messages pour les autres champs
+            ]; 
+
+           // Effectuer la validation
+             $validator = Validator::make($validatedData, $rules, $messages);
+             
+             $dateTimeString = $validatedData['date'] . ' ' . $validatedData['time'] . ':00';
+            //dd($dateTimeString);
+            $formattedDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $dateTimeString);
+    
+            $barber = $this->selectBarber($validatedData['haircut_id'], $formattedDateTime);
+            //dd($barber);
+            //$barberfilter = $this->matchBarber($barber, $validatedData['address'], $validatedData['location']);
+            $notif = $this->sendNotification($barber);
+            $saved = $this->store($validatedData, $barber);   
+
+        if ($validator->fails()) {
+            // Redirection vers une page avec les erreurs de validation
+            return redirect()->route('appointments.review')->withErrors($validator)->withInput();
+            }
+           
+        } 
+            else 
+        {
+            // si cette variable n'hexiste pas dans ce cas on traite les données envoyé par la requette POST
+           // Construire un tableau à partir des données de session
+           $validatedData = [
+            'location' => $request->session()->get('appointment.step1.location'),
+            'address' => $request->session()->get('appointment.step2.address'),
+            'timing' => $request->session()->get('appointment.step3.timing'),
+            //'otherDetail' => $request->session()->get('appointment.step3.otherDetail'),
+            'date' => $request->session()->get('appointment.step4.date'),
+            'time' => $request->session()->get('appointment.step4.time'),
+            'female_haircut' => $request->session()->get('appointment.step5.female_haircut'),
+            'male_haircut' => $request->session()->get('appointment.step5.male_haircut'),
+            'child_haircut' => $request->session()->get('appointment.step5.child_haircut'),
+            'haircut_id' => $request->session()->get('appointment.step6.haircut_id'),
+            // ajoutez les autres données
+            ];
+
         // Définir les règles de validation pour chaque donnée
              $rules = [
             'location' => 'required',
@@ -262,9 +325,9 @@ class AppointmentsController extends Controller
             'timing' => 'required',
             'date' => 'required',
             'time' => 'required',
-            'female_haircut' => 'required',
-            'male_haircut' => 'required',
-            'child_haircut' => 'required',
+            'female_haircut' => 'nullable',
+            'male_haircut' => 'nullable',
+            'child_haircut' => 'nullable',
             'haircut_id' => 'required',
             // ajoutez les règles pour les autres données
             ];
@@ -275,38 +338,24 @@ class AppointmentsController extends Controller
             'location.required' => 'Le champ data2 est obligatoire.',
             // ajoutez les messages pour les autres champs
             ]; 
-
+           
         // Effectuer la validation
          $validator = Validator::make($validatedData, $rules, $messages);
 
-        if ($validator->fails()) {
-            // Redirection vers une page avec les erreurs de validation
-            return redirect()->route('appointments.review')->withErrors($validator)->withInput();
-            }   
-        } 
-            else 
-        {
-            // si cette variable n'hexiste pas dans ce cas on traite les données envoyé par la requette POST
-            $validatedData = $request->validate([
-                'location' => ['required'],
-                'address' => ['required'],
-                'timing' => ['required'],
-                'date' => ['required'],
-                'time' => ['required'],
-                'female_haircut' => ['required'],
-                'male_haircut' => ['required'],
-                'child_haircut' => ['required'],
-                'haircut_id' => ['required'],
-            ], [
-                'location.required' => 'Le champ nom est obligatoire.',
-                'address.required' => 'Le nom doit être une chaîne de caractères.',
-                'timing.required' => 'Le nom ne peut pas dépasser 255 caractères.',
-                'date.required' => 'L’adresse e-mail est requise.',
-            ]);
+         $dateTimeString = $validatedData['date'] . ' ' . $validatedData['time'] . ':00';
+         
+         $formattedDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $dateTimeString);
+ 
+         $barber = $this->selectBarber($validatedData['haircut_id'], $formattedDateTime);
+         
+         $notif = $this->sendNotification($barber);
+         $saved = $this->store($validatedData, $barber);
+
             if ($validator->fails()) {
                 // Redirection vers une page avec les erreurs de validation
                 return redirect()->route('appointments.review')->withErrors($validator)->withInput();
             }
+           
             }
         } else {
             // L'utilisateur n'est pas connecté
@@ -317,15 +366,7 @@ class AppointmentsController extends Controller
             return redirect()->route('login');
             
         }
-        $dateTimeString = $validatedData['date'] . ' ' . $validatedData['time'] . ':00';
-        //dd($dateTimeString);
-        $formattedDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $dateTimeString);
-
-        $barber = $this->selectBarber($validatedData['haircut_id'], $formattedDateTime);
-        //dd($barber);
-        //$barberfilter = $this->matchBarber($barber, $validatedData['address'], $validatedData['location']);
-        $notif = $this->sendNotification($barber);
-        $saved = $this->store($validatedData, $barber);
+       return $saved;
     }
 
 
@@ -670,21 +711,19 @@ public function store($validatedData, $barberIds2)
         'status' => 'wainting',
         'selected_profile' => $barberIdsString
     ]);
-
+    //dd($appointment );
     $appointment->save();
+    
     Session::forget('verifyfirstappointment');
-    Session::forget('appointment.step1.location');
-    Session::forget('appointment.step2.address');
-    Session::forget('appointment.step3.timing');
-    Session::forget('appointment.step3.otherDetail');
-    Session::forget('appointment.step4.date');
-    Session::forget('appointment.step4.time');
-    Session::forget('appointment.step5.female_haircut');
-    Session::forget('appointment.step5.male_haircut');
-    Session::forget('appointment.step5.child_haircut');
-    Session::forget('appointment.step6.haircut_id');
-
-    return redirect(route('dashboard', absolute: false));
+    Session::forget('appointment.step1');
+    Session::forget('appointment.step2');
+    Session::forget('appointment.step3');
+    Session::forget('appointment.step4');
+    Session::forget('appointment.step4');
+    Session::forget('appointment.step5');
+    Session::forget('appointment.step6');
+    
+    return redirect(route('dashboard'));
     
 }
 

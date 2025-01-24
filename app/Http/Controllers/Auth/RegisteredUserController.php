@@ -43,7 +43,7 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'account_type' => ['nullable'],
-            'phone_number' => ['required', 'regex:/^(\+33|0)[1-9](\d{2}){4}$/'],
+            'phone' => ['required', 'regex:/^(\+33|0)[1-9](\d{2}){4}$/'],
         ]);
         //dd($user );
         $user = User::create([
@@ -51,7 +51,7 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'account_type' => $request->account_type,
-            'phone_number' => $request->phone_number
+            'phone' => $request->phone
         ]);
         $account_type = $request->account_type;
         //dd($account_type);

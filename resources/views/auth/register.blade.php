@@ -1,55 +1,68 @@
-<x-guest-layout>
-    @if(!session()->has('account_type'))
+@extends('layouts.app')
+@if(!session()->has('account_type'))
     <script>
         window.location.href = "{{ route('auth.choix-type-compte') }}"; // Utilisez JavaScript pour rediriger
     </script>
     @endif
-    @section('title', __('inscription'))
+@section('title', 'Register - Ndeye Coiffure')
+@section('content')
 
-    
-    <form method="POST" action="{{ route('register') }}">
+<div class='log-container'>
+    <h1 class='text-center mb-3'>{{ __('Register') }}</h1>
+    <form method="POST" action="{{ route('register') }}" class='form-css reg'>
         @csrf
 
        
     <!-- Étape 2 : Formulaire d'enregistrement -->
-    <div id="step2"> 
 
         <!-- Name -->
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+        <div class='d-flex gap-register'>
+            <div class='fle'>
+                <img class='input-file-register' src="{{ asset('img/icons/User.png') }}">
+                <x-input-label for="name" :value="__('Name*')" />
+                <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
+                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+            </div>
+            <div>
+                <x-input-label for="pername" :value="__('Surname')" />
+                <x-text-input id="pername" class="block mt-1 w-full" type="text" name="pername" :value="old('pername')" autofocus autocomplete="surname" />
+                <x-input-error :messages="$errors->get('pername')" class="mt-2" />
+            </div>  
         </div>
 
         <!-- Email Address -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
+        <div class="mt-1 fle">
+            <img class='input-file' src="{{ asset('img/icons/PaperPlane.png') }}">
+            <x-input-label for="email" :value="__('Email*')" />
             <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-         <!-- phone number -->
-         <div>
-            <x-input-label for="phone_number" :value="__('Phone')" />
-            <x-text-input id="phone_number" class="block mt-1 w-full" type="text" name="phone_number" :value="old('phone_number')" required autofocus autocomplete="phone_number" />
-            <x-input-error :messages="$errors->get('phone_number')" class="mt-2" />
+         <!-- Phone NUmber -->
+         <div class="mt-1">
+            <x-input-label for="phone" :value="__('Phone Number*')" />
+            <x-text-input id="phone" class="block mt-1 w-full" type="tel" name="phone" :value="old('phone')" autocomplete="phone" />
+            <x-input-error :messages="$errors->get('phone')" class="mt-2" />
         </div>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+       <!-- Password -->
+       <div class="mt-1 fle">
+        <img class='input-file' src="{{ asset('img/icons/LockKey.png') }}">
+        <x-input-label for="password" :value="__('Password*')" />
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
+        <x-text-input id="password" class="block mt-1 w-full"
+                        type="password"
+                        name="password"
+                        required autocomplete="new-password" />
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+        <x-input-error :messages="$errors->get('password')" class="mt-2" />
+    </div>
 
         <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
+
+        <!-- Confirm Password -->
+        <div class="mt-1">
+            <x-input-label for="password_confirmation" :value="__('Confirm Password*')" />
 
             <x-text-input id="password_confirmation" class="block mt-1 w-full"
                             type="password"
@@ -57,19 +70,33 @@
 
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
-
+        
         <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
-            </a>
+            
             <input type="hidden" name="account_type" value="{{ session('account_type', 'default') }}" id="accountTypeField">
-            <button type="button" onclick="goToStep1()">Retour</button>
-            <x-primary-button class="ms-4">
+            <x-primary-button class="ms-4 btn-ndeye">
                 {{ __('Register') }}
             </x-primary-button>
         </div>
-    </div>
+        <hr class='line'>
     </form>
+
+    <div>
+        <a class="btn-ndeye no-bg" href="{{ route('login') }}">
+                {{ __('Sign in with my account') }}
+            </a>
+    </div>
+    <div class='login-social'>
+        <p class='text-center'>{{ __('Connect with') }}</p>
+        <div class='d-flex justify-content-center line-bottom no-bottom'>
+            <div><a href='#' title='Se connecter avec Google'><img src="{{ asset('img/icons/Google-icon.png') }}"></a></div>
+            <div><a href='#' title='Se connecter avec Instagram'><img src="{{ asset('img/icons/Instagram-icon.png') }}"></a></div>
+        </div>
+        <p class='text-center register'>{{ __('Would you like to join us?') }} <a href="{{ route('login') }}"> {{ __('Login') }}</a></p>
+    </div>
+</div>
+<!--<button type="button" onclick="goToStep1()">Retour</button> -->
+
     <script>
     /*document.addEventListener('DOMContentLoaded', function() {
         // Récupérer la valeur de 'account_type' de localStorage
@@ -93,4 +120,4 @@
             
     } 
     </script>
-</x-guest-layout>
+   @endsection 

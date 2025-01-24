@@ -23,7 +23,7 @@ class DashboardAppointmentController extends Controller
          $appointments = Appointment::whereRaw("FIND_IN_SET(?, selected_profile) > 0", [$userId])->get();
      
          // Retourner la vue avec les données
-         return view('dashboard.dashboard-appointment', compact('appointments'));
+         return view('dashboard.mes-reservations', compact('appointments'));
      }
      
 // Méthode pour afficher les détails d'un rendez-vous
