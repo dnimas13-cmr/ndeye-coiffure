@@ -59,7 +59,7 @@
                         <span class='close-pop' title='Fermer'><img src="{{ asset('img/icons/Scissors.png') }}" alt='Fermer'></span>
                         <h3>{{ __('Vous souhaitez') }} :</h3>
                         <a href="{{ route('appointments.partials.step1') }}" class='btn-ndeye'>{{ __('Prendre rendez-vous') }}</a>
-                        <a href="{{ route('recruitment.partials.place') }}" class='btn-ndeye sec'>{{ __('Recruter une coiffeuse') }}</a>
+                        <a href="{{ route('recruitment.partials.reason') }}" class='btn-ndeye sec'>{{ __('Recruter une coiffeuse') }}</a>
                     </div>
                     <div class='svt'>
                         <a href='#' class='btn-none'>{{ __('Next') }}</a>

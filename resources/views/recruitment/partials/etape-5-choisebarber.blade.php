@@ -96,16 +96,17 @@
             <div class='btn-step mt-4 d-flex'>
                 <a href="{{ route('recruitment.partials.date-hour') }}" class='btn-step btn-sec'>{{ __('Previous') }}</a>
                 <a href="#" class='btn-step btn-sec'>{{ __('Skip this step') }}</a>
-                <a href="{{ route('recruitment.partials.paiement') }}" class='btn-step btn-pri'>{{ __('Let\'s go !') }}</a>
+                <a href="+" class='btn-step btn-pri'>{{ __('Let\'s go !') }}</a>
             </div>
         </div>
         <div class='step-container right-step'>
             <div class='bg-shadow'>
-                <h4 class='text-center'>{{ __('Summary') }}</h4>
-                <p class='d-flex'><img src="{{ asset('img/icons/MapPinColor.png') }}" class='icon-step'> <span>{{ __('Helping with a wedding') }}</span></p>
-                <p class='d-flex'><img src="{{ asset('img/icons/MapPinColor.png') }}" class='icon-step'> <span>83000 Toulon</span></p>
-                <p class='d-flex'><img src="{{ asset('img/icons/ScissorsColor.png') }}" class='icon-step'> <span>Coiffure événementielle, Lissage</span></p>
-                <p class='d-flex'><img src="{{ asset('img/icons/ClockColor.png') }}" class='icon-step'> <span>{{ __('Mercredi 19 décembre à 11h') }}</span></p>
+                <h4 class='text-center'>{{ __('Résumé') }}</h4>
+                <p class='d-flex'><img src="{{ asset('img/icons/MapPinColor.png') }}" class='icon-step'> <span>{{  session('recruitment.step1.reason')}}</span></p>
+                <p class='d-flex'><img src="{{ asset('img/icons/MapPinColor.png') }}" class='icon-step'> <span>{{ session('recruitment.step2.address')}}</span></p>
+                <p class='d-flex'><img src="{{ asset('img/icons/ScissorsColor.png') }}" class='icon-step'> <span>@if(session('recruitment.step3.kills'))
+                    {{ implode(', ', session('recruitment.step3.kills')) }} @endif</span></p>
+                <p class='d-flex'><img src="{{ asset('img/icons/ClockColor.png') }}" class='icon-step'> <span>{{ session('recruitment.step4.date') }} à {{session('recruitment.step4.time') }}</span></p>
             </div>
 
             <div class='bg-shadow mt-3 profil-recruteur'>

@@ -77,14 +77,14 @@ Route::get('/validate-appointment/{id}', [AppointmentsController::class, 'update
 // Route pour les recrutements
 Route::get('/recruitment/partials/step-1-reason', [RecruitmentController::class, 'createStep1'])->name('recruitment.partials.reason');
 Route::post('/recruitment/partials/step-1-reason', [RecruitmentController::class, 'postStep1']);
-Route::get('/recruitment/partials/step-2-prestation', [RecruitmentController::class, 'createStep2'])->name('recruitment.partials.prestation');
-Route::post('/recruitment/partials/step-2-prestation', [RecruitmentController::class, 'postStep2']);
-Route::get('/recruitment/partials/step-3-choise-of-day', [RecruitmentController::class, 'createStep3'])->name('recruitment.partials.choise-of-day');
-Route::post('/recruitment/partials/step-3-choise-of-day', [RecruitmentController::class, 'postStep3']);
+Route::get('/recruitment/partials/step-2-address', [RecruitmentController::class, 'createStep2'])->name('recruitment.partials.address');
+Route::post('/recruitment/partials/step-2-address', [RecruitmentController::class, 'postStep2']);
+Route::get('/recruitment/partials/step-3-choise-kills', [RecruitmentController::class, 'createStep3'])->name('recruitment.partials.choise-kills');
+Route::post('/recruitment/partials/step-3-choise-kills', [RecruitmentController::class, 'postStep3']);
 Route::get('/recruitment/partials/step-4-date-hour', [RecruitmentController::class, 'createStep4'])->name('recruitment.partials.date-hour');
-Route::post('/recruitment/partials/step-4-date-hour', [RecruitmentController::class, 'postStep4']);
-Route::get('/recruitment/partials/step-5-who-does-her-hair', [RecruitmentController::class, 'createStep5'])->name('recruitment.partials.swho-does-her-hair');
-Route::post('/recruitment/partials/step-5-who-does-her-hair', [RecruitmentController::class, 'postStep5']);
+Route::post('/recruitment/partials/step-4-date-hour', [RecruitmentController::class, 'traitmentrecruitment']);
+Route::get('/recruitment/partials/step-5-choisebarber', [RecruitmentController::class, 'createStep5'])->name('recruitment.partials.choisebarber');
+Route::post('/recruitment/partials/step-5-choisebarber', [RecruitmentController::class, 'postStep5']);
 Route::get('/recruitment/partials/step-6-paiement', [RecruitmentController::class, 'createStep6'])->name('recruitment.partials.paiement');
 Route::post('/recruitment/partials/step-6-paiement', [RecruitmentController::class, 'postStep6']);
 //Route::get('/appointments/partials/step6', [AppointmentsController::class, 'createStep6'])->name('appointments.partials.step6');
@@ -92,8 +92,8 @@ Route::post('/recruitment/partials/step-6-paiement', [RecruitmentController::cla
 Route::get('/recruitment/review', [RecruitmentController::class, 'review'])->name('recruitment.review');
 Route::post('/recruitment/store', [RecruitmentController::class, 'store'])->name('recruitment.store');
 
-Route::get('/recruitment-process', [RecruitmentController::class, 'traitmentappointment'])->name('recruitment.process');
-Route::post('/recruitment/review', [RecruitmentController::class, 'traitmentappointment']);
+Route::get('/recruitment-process', [RecruitmentController::class, 'traitmentrecruitment'])->name('recruitment.process');
+Route::post('/recruitment/review', [RecruitmentController::class, 'traitmentrecruitment']);
 
 
 
