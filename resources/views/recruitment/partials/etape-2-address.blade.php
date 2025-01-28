@@ -15,7 +15,7 @@
             </div>
             <div class='btn-step mt-4 d-flex'>
                 <a href="{{ route('recruitment.partials.reason') }}" class='btn-step btn-sec'>{{ __('Retour') }}</a>
-                <a href="" onclick="submitStep2()" class='btn-step btn-pri'>{{ __('Suivant') }}</a>
+                <button type="button" onclick="submitStep2()" class='btn-step btn-pri'>{{ __('Suivant') }}</button>
             </div>
             <div id="errorAddress"></div>
         </form>

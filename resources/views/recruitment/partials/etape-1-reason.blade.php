@@ -31,7 +31,7 @@
             </div>
             <div class='btn-step mt-4 d-flex'>
                <!-- <a href="#" class='btn-step btn-sec'>{{ __('Retour') }}</a> -->
-                <a href="" onclick="submitStep1()" class='btn-step btn-pri'>{{ __('Suivant') }}</a>
+                <button type="button" onclick="submitStep1()" class='btn-step btn-pri'>{{ __('Suivant') }}</button>
             </div>
         </form>
         </div>
@@ -54,7 +54,7 @@
                     break;
                 }
             }
-          alert(reason)
+          //alert(reason)
             fetch('{{ route('recruitment.partials.reason') }}', {
                 method: 'POST',
                 headers: {

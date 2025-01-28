@@ -127,14 +127,17 @@ class RecruitmentController extends Controller
      }
 
      public function createStep4() { 
-        $killsIds = implode(', ', session('recruitment.step3.kills')); // Ex: "1,6"
-
-        if (!$killsIds) {
-            return redirect()->back()->with('error', 'Aucune compétence sélectionnée dans l\'étape précédente.');
-        }
+        // Récupérer les données de la session
+        $killsIds = session('recruitment.step3.kills');
     
-        // Transformer les IDs sous forme d'un tableau
-        $killsIdsArray = explode(',', $killsIds);
+        // Vérifier si $killsIds est un tableau ou une chaîne
+        if (is_array($killsIds)) {
+            $killsIdsArray = $killsIds;
+        } elseif (is_string($killsIds)) {
+            $killsIdsArray = explode(',', $killsIds); // Convertir la chaîne en tableau
+        } else {
+            return redirect()->back()->with('error', 'Les compétences sélectionnées sont invalides.');
+        }
     
         // Requête dans la table kills pour récupérer les enregistrements correspondants
         $kills = \App\Models\Kill::whereIn('id', $killsIdsArray)->get();
@@ -259,12 +262,13 @@ class RecruitmentController extends Controller
               
               $dateTimeString = $validatedData['date'] . ' ' . $validatedData['time'] . ':00';
               $Endtime1 = $validatedData['date'] . ' ' . $validatedData['time'] . ':00';
-             //dd($dateTimeString);
+             
              $formattedDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $dateTimeString);
              $Endtime =  Carbon::createFromFormat('Y-m-d H:i:s', $Endtime1);
 
+             //dd($validatedData['kills']);
              $barber = $this->selectBarber($validatedData['kills'], $formattedDateTime, $Endtime);
-
+             //dd($barber);
              $viewsbarber = $this->sendbarber($barber, $validatedData['kills']);
 
              return $viewsbarber;
@@ -294,10 +298,16 @@ class RecruitmentController extends Controller
         $endTime = $endtime;
         $dayOfWeek = $start_time->format('l');
         //dd($dayOfWeek);
-        //dd($start_time->format('H:i:s'));
-        // Étape 1: Sélection des barbiers basés sur les hairstyles disponibles
-        $barberslist = Barber::whereRaw("FIND_IN_SET(?, listkills) > 0", [$kills])->pluck('id');
-        //dd($barbersWithHairstyle);
+        
+        $killsArray = array_map('trim', explode(',', $kills)); // Convertir '2,5' en [2, 5]
+        //dd($killsArray);
+        // Étape 1: Sélection des barbiers basés sur les compétences disponibles
+        $barberslist = Barber::where(function ($query) use ($killsArray) {
+            foreach ($killsArray as $kill) {
+                $query->orWhereRaw("FIND_IN_SET(?, listkills) > 0", [$kill]);
+            }
+        })->pluck('id');
+        //dd($barberslist);
         if ($barberslist->isEmpty()) {
             dump('Aucun barber avec ces compétences sélectionné');
         }
@@ -305,7 +315,7 @@ class RecruitmentController extends Controller
         $availableBarbers = collect();
     
         // Étape 2: Vérifier chaque barbier pour les disponibilités et les non-working days
-        foreach ($barberslist as $barberId) {
+        /*foreach ($barberslist as $barberId) {
             $barber = Barber::find($barberId);
     
             // Vérifier les jours non travaillés
@@ -316,7 +326,7 @@ class RecruitmentController extends Controller
             if ($nonWorking) {
                // dump('Barber ' . $barberId . ' est non disponible aujourd’hui');
                 continue;
-            }
+            } */
     
             // Vérifier les disponibilités
            /* try {
@@ -391,7 +401,7 @@ dd($isAvailable);
             } */
     
             // Étape 3: Vérifier les rendez-vous existants
-            $hasAppointment = $barber->appointments()->where('id_barbers', $barberId)
+           /* $hasAppointment = $barber->appointments()->where('id_barbers', $barberId)
                                          ->where('appointment_start_time', '<=', $start_time->format('H:i:s'))
                                          ->where('appointment_end_time', '>=', $endTime->format('H:i:s'))
                                          ->exists();
@@ -399,13 +409,13 @@ dd($isAvailable);
             if ($hasAppointment) {
                 //dump('Barber ' . $barberId . ' a déjà un rendez-vous programmé');
                 continue;
-            }
+            } 
     
             $availableBarbers->push($barberId);
-        }
+        }*/
     
         //dump('Barbiers disponibles:', $availableBarbers);
-        return response()->json($availableBarbers);
+        return $barberslist;
     }
 
 
@@ -416,25 +426,39 @@ dd($isAvailable);
     if (is_string($listbarber)) {
         $listbarber = explode(',', $listbarber); // Transformer "1,2" en [1, 2]
     }
-
-    if (!is_array($listbarber)) {
+    
+    if (is_array($listbarber)) {
         return redirect()->back()->with('error', 'Liste des barbers invalide.');
     }
 
     // Vérifier et formater $listkills
+    
     if (is_string($listkills)) {
-        $listkills = explode(',', $listkills); // Transformer "1,2,3" en [1, 2, 3]
+        $listkills = array_map('trim', explode(',', $listkills)); // Transformer "1,2,3" en [1, 2, 3]
     }
-
+    //dd($listkills);
     if (!is_array($listkills)) {
         return redirect()->back()->with('error', 'Liste des compétences invalide.');
     }
 
     // Requête pour récupérer les barbers correspondant à $listbarber
     $barbers = \App\Models\Barber::whereIn('id', $listbarber)->get();
-
+    //dd($listbarber);
     // Requête pour récupérer les compétences correspondant à $listkills
     $kills = \App\Models\Kill::whereIn('id', $listkills)->get();
+    dd($kills);
+    // requete pour récupérer les user correspondant à listbarber
+    $idusers = \App\Models\Barber::whereIn('id', $listbarber)->pluck('id_users');
+    //dd($idusers);
+
+    $users = \App\Models\User::whereIn('id', $idusers)->get();
+
+    //dd($users);
+    $countOccurrences = \App\Models\Recruitment::whereIn('id_babers', $listbarber)
+    ->selectRaw('id_babers, COUNT(*) as count')
+    ->groupBy('id_babers')
+    ->get();
+    //dd($countOccurrences);
 
     // Vérification que des données existent
     if ($barbers->isEmpty() || $kills->isEmpty()) {
@@ -442,7 +466,7 @@ dd($isAvailable);
     }
 
     // Redirection vers la vue avec les données
-    return view('recruitment.partials.choisebarber', compact('barbers', 'kills'));
+    return view('recruitment.partials.etape-5-choisebarber', compact('barbers', 'kills', 'users','countOccurrences'));
 }
 
 }

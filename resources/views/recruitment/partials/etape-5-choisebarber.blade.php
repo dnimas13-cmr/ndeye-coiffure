@@ -6,86 +6,33 @@
         <div class='step-container left-step'>
             <div class='bg-shadow'>
                 <h4>{{ __('Hairdressers to suit your needs') }}</h4>
+                @foreach($users as $user)
+                @foreach($kills as $kill)
+                @foreach($countOccurrences as $occurrence)
                 <div class='item-dia d-flex mt-3'>
                     <div class='img-dia left-c'>
                         <img src="{{ asset('img/rdv/recrue-1.png') }}" alt="{{ __('Title Diagnostic') }}">
                     </div>
                     <div class='content-dia right-c'>
-                        <h3 class='mb-2'>Jade Camara</h3>
+                        <h3 class='mb-2'>{{ $user->name }}</h3>
                         <div class='feat d-flex line-bottom-4'>
                             <div><img src="{{ asset('img/icons/Clock.png') }}"> <span>4.8</span></div>
-                            <div><img src="{{ asset('img/icons/MapPin.png') }}"> <span>Toulon</span></div>
-                            <div><img src="{{ asset('img/icons/Scissors.png') }}"> <span>56 missions</span></div>
+                            <div><img src="{{ asset('img/icons/MapPin.png') }}"> <span>{{ $user->location_adress }}</span></div>
+                            <div><img src="{{ asset('img/icons/Scissors.png') }}"> <span>{{ $occurrence->count }} missions</span></div>
                         </div>
                         <div class='description-dia mt-2'>
                             <h6>{{ __('Compétences') }}</h6>
                             <div class='compet'>
-                                <span class='competence'>Coiffure événementielle</span>
-                                <span class='competence'>Lissage</span>
+                                <span class='competence'>{{ $kill->kills }}</span>
+                                
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class='item-dia d-flex mt-3'>
-                    <div class='img-dia left-c'>
-                        <img src="{{ asset('img/rdv/recrue-2.png') }}" alt="{{ __('Title Diagnostic') }}">
-                    </div>
-                    <div class='content-dia right-c'>
-                        <h3 class='mb-2'>Jade Camara</h3>
-                        <div class='feat d-flex line-bottom-4'>
-                            <div><img src="{{ asset('img/icons/Clock.png') }}"> <span>4.8</span></div>
-                            <div><img src="{{ asset('img/icons/MapPin.png') }}"> <span>Toulon</span></div>
-                            <div><img src="{{ asset('img/icons/Scissors.png') }}"> <span>56 missions</span></div>
-                        </div>
-                        <div class='description-dia mt-2'>
-                            <h6>{{ __('Compétences') }}</h6>
-                            <div class='compet'>
-                                <span class='competence'>Coiffure événementielle</span>
-                                <span class='competence'>Lissage</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class='item-dia d-flex mt-3'>
-                    <div class='img-dia left-c'>
-                        <img src="{{ asset('img/rdv/recrue-3.png') }}" alt="{{ __('Title Diagnostic') }}">
-                    </div>
-                    <div class='content-dia right-c'>
-                        <h3 class='mb-2'>Jade Camara</h3>
-                        <div class='feat d-flex line-bottom-4'>
-                            <div><img src="{{ asset('img/icons/Clock.png') }}"> <span>4.8</span></div>
-                            <div><img src="{{ asset('img/icons/MapPin.png') }}"> <span>Toulon</span></div>
-                            <div><img src="{{ asset('img/icons/Scissors.png') }}"> <span>56 missions</span></div>
-                        </div>
-                        <div class='description-dia mt-2'>
-                            <h6>{{ __('Compétences') }}</h6>
-                            <div class='compet'>
-                                <span class='competence'>Coiffure événementielle</span>
-                                <span class='competence'>Lissage</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class='item-dia d-flex mt-3'>
-                    <div class='img-dia left-c'>
-                        <img src="{{ asset('img/rdv/recrue-4.png') }}" alt="{{ __('Title Diagnostic') }}">
-                    </div>
-                    <div class='content-dia right-c'>
-                        <h3 class='mb-2'>Jade Camara</h3>
-                        <div class='feat d-flex line-bottom-4'>
-                            <div><img src="{{ asset('img/icons/Clock.png') }}"> <span>4.8</span></div>
-                            <div><img src="{{ asset('img/icons/MapPin.png') }}"> <span>Toulon</span></div>
-                            <div><img src="{{ asset('img/icons/Scissors.png') }}"> <span>56 missions</span></div>
-                        </div>
-                        <div class='description-dia mt-2'>
-                            <h6>{{ __('Compétences') }}</h6>
-                            <div class='compet'>
-                                <span class='competence'>Coiffure événementielle</span>
-                                <span class='competence'>Lissage</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                @endforeach
+                @endforeach
+                @endforeach
+                
                 <div class='pagination-dia d-flex justify-content-end mt-4'>
                     <div>
                         <a href='#' class='dia-prev'><img src="{{ asset('img/icons/Arrow.png') }}"></a>

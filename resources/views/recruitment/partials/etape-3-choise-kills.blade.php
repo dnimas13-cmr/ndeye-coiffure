@@ -53,7 +53,7 @@
             </div>
             <div class='btn-step mt-4 d-flex'>
                 <a href="{{ route('recruitment.partials.address') }}"  class='btn-step btn-sec'>{{ __('Retour') }}</a>
-                <a href="" onclick="submitStep3()" class='btn-step btn-pri'>{{ __('Suivant') }}</a>
+                <button type="button" onclick="submitStep3()" class='btn-step btn-pri'> {{ __('Suivant') }}</button>
             </div>
         </form>
         </div>
@@ -83,7 +83,6 @@
             otherInput.removeAttribute('required'); // Retirer le caractère requis
              }
 
-
          }
 
          function submitStep3() {
@@ -92,12 +91,15 @@
     let selectedkills = Array.from(checkboxes).map(checkbox => checkbox.value);
 
     // Vérifier si au moins une option est sélectionnée
-    if (selectedkills.length === 0) {
+    
+    if (selectedkills.length == 0) {
         document.getElementById('errorKills').innerHTML = 'Veuillez sélectionner au moins une compétence.';
         return;
-    } else {
+    } 
+    
+    else {
         document.getElementById('errorKills').innerHTML = ''; // Effacer l'erreur si corrigée
-    }
+    
 
     // Vérifier le niveau d'étude
     let schoolLevel = document.getElementById('school_level').value;
@@ -115,7 +117,7 @@
         schoollevel: schoolLevel || null,
         experienceyears: experienceYears || null,
     };*/
-    alert(selectedkills);
+    //alert(selectedkills);
     // Envoi des données en AJAX
     fetch('{{ route('recruitment.partials.choise-kills') }}', {
         method: 'POST',
@@ -142,6 +144,7 @@
             console.error('Erreur lors de l\'envoi des données:', error);
             document.getElementById('errorKills').innerHTML = "Erreur lors du traitement de la requête.";
         });
+    }
 }
                 
                 
