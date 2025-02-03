@@ -13,13 +13,15 @@ return new class extends Migration
     {
         Schema::create('recruitments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_babers')->constrained('barbers');
-            $table->foreignId('id_recruiters')->constrained('recruiters');
+            $table->foreign('id_babers')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('id_recruiters')->references('id')->on('users')->onDelete('cascade');
             $table->text('service_adress');
-            $table->float('location_distance',8,2);
-            $table->datetime('start_time');
-            $table->datetime('end_time');
-            $table->unsignedInteger('service_price');
+            $table->text('reason')->nullable();
+            $table->float('location_distance',8,2)->nullable();;
+            $table->date('day_of_service');
+            $table->time('start_time');
+            $table->time('end_time');
+            $table->float('hourly_rate',8,2);
             $table->text('kills_wanted');
             $table->timestamps();
         });

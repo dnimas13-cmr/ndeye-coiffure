@@ -723,7 +723,7 @@ public function store($validatedData, $barberIds2)
     Session::forget('appointment.step5');
     Session::forget('appointment.step6');
     
-    return redirect(route('dashboard'));
+    return redirect(route('mes-reservations'));
     
 }
 

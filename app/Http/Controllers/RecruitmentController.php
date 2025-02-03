@@ -15,8 +15,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
-use App\Models\Hairstyle;
-use App\Models\Appointment;
 use App\Models\Barber;
 use App\Mail\BarberNotification;
 use Illuminate\Support\Facades\Mail;
@@ -24,12 +22,39 @@ use App\Models\Notification;
 use App\Models\NonWorkingDay;
 use Illuminate\Support\Facades\Log;
 use App\Models\Kill;
-
+use App\Models\Recruitment;
+use Illuminate\Support\Collection;
 
 class RecruitmentController extends Controller
 {
      // Gestion de l'étape 1 du formulaire 
-     public function createStep1() { return view('recruitment.partials.etape-1-reason'); }
+     public function createStep1(Request $request) 
+     { 
+        if (Auth::check()) {
+            // Utilisateur connecté
+            // Appliquer votre code ici (par exemple, une logique métier)
+            // ...
+
+            // Détruire la variable de session 'recruitmentverificationconnetion' si elle existe
+            if ($request->session()->has('recruitmentverificationconnetion')) 
+            {
+                $request->session()->forget('recruitmentverificationconnetion');
+                
+            } 
+            return view('recruitment.partials.etape-1-reason');
+        }
+            else
+            {
+                // Utilisateur non connecté
+            // Créer la variable de session 'recruitmentverificationconnetion'
+            $request->session()->put('recruitmentverificationconnetion', true);
+
+            // Rediriger vers la page de connexion
+            return redirect()->route('login')->with('error', 'Vous devez être connecté pour commencer à recruter.');
+        }
+            }
+         
+    
 
      public function postStep1(Request $request)
      {
@@ -163,13 +188,16 @@ class RecruitmentController extends Controller
         $messages = [
             'date.required' => 'Vous devez sélectionner une date.',
             'date.date' => 'Le format de la date n\'est pas valide.',
-            'time.required' => 'Vous devez sélectionner un horaire.',
-            'time.date_format' => 'Le format de l\'heure n\'est pas valide.',
+            'starttime.required' => 'Vous devez sélectionner une horaire de début.',
+            'starttime.date_format' => 'Le format de l\'heure n\'est pas valide.',
+            'endtime.required' => 'Vous devez sélectionner une horaire de fin.',
+            'endtime.date_format' => 'Le format de l\'heure n\'est pas valide.',
         ];
         try {
         $validatedData = $request->validate([
             'date' => 'required|date',
-            'time' => 'required|date_format:H:i',
+            'starttime' => 'required|date_format:H:i',
+            'endtime' => 'required|date_format:H:i',
         ], $messages);
     
         session(['recruitment.step4' => $validatedData]);
@@ -229,7 +257,8 @@ class RecruitmentController extends Controller
              'schoollevel' => $request->session()->get('recruitment.step3.schoollevel'),
              'experienceyears' => $request->session()->get('recruitment.step3.experienceyears'),
              'date' => $request->input('date'),
-             'time' => $request->input('time'),
+             'starttime' => $request->input('starttime'),
+             'endtime' => $request->input('endtime'),
              // ajoutez les autres données
              ];
  
@@ -241,7 +270,8 @@ class RecruitmentController extends Controller
              'schoollevel' => 'nullable',
              'experienceyears' => 'nullable',
              'date' => 'required|date',
-             'time' => 'required|date_format:H:i',
+             'starttime' => 'required|date_format:H:i',
+             'endtime' => 'required|date_format:H:i',
              // ajoutez les règles pour les autres données
              ];
  
@@ -251,20 +281,27 @@ class RecruitmentController extends Controller
              'address.required' => 'L\'adresse est obligatoire.',
              'kills.required' => 'Les compétences sont obligatoires.',
              'date.required' => 'La date est obligatoire.',
-             'time.required' => 'Le temps est obligatoire.',
-             'time.date_format' => 'Le format de l\'heure n\'est pas valide.',
              'date.date' => 'Le format de la date n\'est pas valide.',
+             'starttime.required' => 'L\heure de début est obligatoire.',
+             'starttime.date_format' => 'Le format de l\'heure n\'est pas valide.',
+             'endtime.required' => 'L\heure de fin est obligatoire.',
+             'endtime.date_format' => 'Le format de l\'heure n\'est pas valide.',
+             
              // ajoutez les messages pour les autres champs
              ]; 
  
             // Effectuer la validation
               $validator = Validator::make($validatedData, $rules, $messages);
               
-              $dateTimeString = $validatedData['date'] . ' ' . $validatedData['time'] . ':00';
-              $Endtime1 = $validatedData['date'] . ' ' . $validatedData['time'] . ':00';
+              Session::put('date', $validatedData['date']);
+              Session::put('starttime', $validatedData['starttime']);
+              Session::put('endtime', $validatedData['endtime']);
+
+              $dateTimeString = $validatedData['date'] . ' ' . $validatedData['starttime'] . ':00';
+              $Endtime = $validatedData['date'] . ' ' . $validatedData['endtime'] . ':00';
              
              $formattedDateTime = Carbon::createFromFormat('Y-m-d H:i:s', $dateTimeString);
-             $Endtime =  Carbon::createFromFormat('Y-m-d H:i:s', $Endtime1);
+             $Endtime =  Carbon::createFromFormat('Y-m-d H:i:s', $Endtime);
 
              //dd($validatedData['kills']);
              $barber = $this->selectBarber($validatedData['kills'], $formattedDateTime, $Endtime);
@@ -441,32 +478,96 @@ dd($isAvailable);
         return redirect()->back()->with('error', 'Liste des compétences invalide.');
     }
 
-    // Requête pour récupérer les barbers correspondant à $listbarber
-    $barbers = \App\Models\Barber::whereIn('id', $listbarber)->get();
-    //dd($listbarber);
-    // Requête pour récupérer les compétences correspondant à $listkills
-    $kills = \App\Models\Kill::whereIn('id', $listkills)->get();
-    dd($kills);
-    // requete pour récupérer les user correspondant à listbarber
-    $idusers = \App\Models\Barber::whereIn('id', $listbarber)->pluck('id_users');
-    //dd($idusers);
+      // Récupération des utilisateurs à partir des barbiers sélectionnés
+    $idUsers = Barber::whereIn('id', $listbarber)->pluck('id_users');
+    $users = User::whereIn('id', $idUsers)->get();
 
-    $users = \App\Models\User::whereIn('id', $idusers)->get();
+    // Récupération des compétences correspondantes pour chaque barber
+    $barbers = Barber::whereIn('id', $listbarber)->get();
 
-    //dd($users);
-    $countOccurrences = \App\Models\Recruitment::whereIn('id_babers', $listbarber)
-    ->selectRaw('id_babers, COUNT(*) as count')
-    ->groupBy('id_babers')
-    ->get();
-    //dd($countOccurrences);
+    // Collecte des IDs de compétences à partir de tous les barbiers
+    $allKillIds = $barbers->pluck('listkills')
+        ->flatMap(function ($kills) {
+            return explode(',', $kills);
+        })
+        ->unique()
+        ->filter();
 
-    // Vérification que des données existent
-    if ($barbers->isEmpty() || $kills->isEmpty()) {
-        return redirect()->back()->with('error', 'Aucun barber ou compétence correspondant trouvé.');
+    $kills = Kill::whereIn('id', $allKillIds)->get();
+
+    // Récupération des missions pour chaque barber
+    $missionsCount = Recruitment::whereIn('id_babers', $listbarber)
+        ->selectRaw('id_babers, COUNT(*) as count')
+        ->groupBy('id_babers')
+        ->get()
+        ->keyBy('id_babers');
+
+    // Association des données dans une collection
+    $barberData = $barbers->map(function ($barber) use ($users, $kills, $missionsCount) {
+        $user = $users->firstWhere('id', $barber->id_users);
+        $barberKills = $kills->whereIn('id', explode(',', $barber->listkills));
+        $occurrenceCount = $missionsCount[$barber->id]->count ?? 0;
+
+        return [
+            'user' => $user,
+            'kills' => $barberKills,
+            'occurrenceCount' => $occurrenceCount,
+            'hourly_rate' => $barber->hourly_rate,
+        ];
+    });
+
+    return view('recruitment.partials.etape-5-choisebarber', compact('barberData'));
+}
+
+public function store(Request $request, $id)
+{
+    // Récupérer les données de session
+    $reason = session('recruitment.step1.reason');
+    $serviceAddress = session('recruitment.step2.address');
+    $killsWanted = session('recruitment.step3.kills');
+    $dayOfService = session('date');
+    $startTime = session('starttime');
+    $endTime = session('endtime');
+    $locationDistance = $request->input('location_distance');  // Lieu de distance passé par l'utilisateur ou calculé selon le besoin
+
+    // Récupérer l'ID de l'utilisateur connecté
+    $recruiterId = auth()->id();  // Utilisation de l'authentification pour obtenir l'utilisateur actuel
+
+    // Récupérer le tarif horaire du coiffeur à partir de la table `barbers` en fonction de l'`id_users`
+    $barber = Barber::where('id_users', $id)->first();  // Trouver le coiffeur par son ID utilisateur
+    $hourlyRate = $barber ? $barber->hourly_rate : 0;  // Si le coiffeur existe, récupérer son hourly_rate, sinon 0
+
+    // Assurez-vous que kills_wanted, service_adress et reason sont des chaînes de caractères
+    if (is_array($killsWanted)) {
+        $killsWanted = implode(',', $killsWanted);
     }
 
-    // Redirection vers la vue avec les données
-    return view('recruitment.partials.etape-5-choisebarber', compact('barbers', 'kills', 'users','countOccurrences'));
+    if (is_array($serviceAddress)) {
+        $serviceAddress = implode(',', $serviceAddress);
+    }
+
+    if (is_array($reason)) {
+        $reason = implode(',', $reason);
+    }
+
+    // Créer une nouvelle entrée dans la table recruitments
+    $recruitment = new Recruitment();
+    $recruitment->service_adress = $serviceAddress;
+    $recruitment->reason = $reason;
+    $recruitment->location_distance = $locationDistance;  // Distance entre l'utilisateur et le coiffeur
+    $recruitment->day_of_service = $dayOfService;
+    $recruitment->start_time = $startTime;
+    $recruitment->end_time = $endTime;
+    $recruitment->hourly_rate = $hourlyRate;  // Tarif horaire du coiffeur
+    $recruitment->kills_wanted = $killsWanted;
+    $recruitment->id_babers = $id;  // ID du coiffeur sélectionné
+    $recruitment->id_recruiters = $recruiterId;  // ID de l'utilisateur recrutant (l'utilisateur connecté)
+
+    // Enregistrer l'entrée dans la table
+    $recruitment->save();
+
+    // Rediriger vers le tableau de bord après l'enregistrement
+    return redirect()->route('dashboard')->with('success', 'Votre demande a été enregistrée avec succès.');
 }
 
 }

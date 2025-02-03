@@ -4,13 +4,20 @@
     
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
+    
+
+<div class='log-container'>
+    <h1 class='text-center'>{{ __('Login') }}</h1>
     @if(session('verifyfirstappointment') == 1)
     <div class="alert alert-warning">
         Vous devez vous connecter avant de passer un rendez-vous.
     </div>
+    @endif
+    @if (session('error'))
+    <div class="alert alert-danger">
+        {{ session('error') }}
+    </div>
 @endif
-<div class='log-container'>
-    <h1 class='text-center'>{{ __('Login') }}</h1>
     <p class='text-center mt-3 paragraphe'>{{ __('Lorem ipsum dolor sit amet adipiscing elit.') }}</p>
     <form method="POST" action="{{ route('login') }}" class='form-css'>
         @csrf

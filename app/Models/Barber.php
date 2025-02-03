@@ -42,4 +42,8 @@ class Barber extends Model
         // Assurez-vous que le modèle Appointment est bien lié par une clé étrangère 'id_barbers'
         return $this->hasMany(Appointment::class, 'id_barbers');
     }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'id_users');
+    }
 }

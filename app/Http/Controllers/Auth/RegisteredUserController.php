@@ -86,7 +86,10 @@ class RegisteredUserController extends Controller
         if($request->session()->get('verifyfirstappointment') && $request->session()->get('verifyfirstappointment') == 1 )
         {
             return redirect()->route('appointment.process');
-        } 
+        } elseif($request->session()->has('recruitmentverificationconnetion')) 
+        {
+            return redirect()->route('recruitment.partials.reason');
+        }
         else 
         {
         return redirect(route('dashboard', absolute: false));

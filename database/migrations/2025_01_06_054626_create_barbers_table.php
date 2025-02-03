@@ -22,6 +22,7 @@ return new class extends Migration
             $table->unsignedInteger('reponse_time')->nullable();
             $table->unsignedInteger('mission_acceptance_rate')->nullable();
             $table->unsignedInteger('positive_reviews')->nullable();
+            $table->float('hourly_rate')->nullable();
             $table->string('cni_photo')->nullable();
             $table->float('performance_score',8,2)->nullable();
             $table->timestamps();

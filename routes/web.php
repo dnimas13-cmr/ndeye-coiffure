@@ -7,6 +7,8 @@ use App\Http\Controllers\AppointmentsController;
 use App\Http\Controllers\RecruitmentController;
 use App\Http\Controllers\HairstylesController;
 use App\Http\Controllers\DashboardAppointmentController;
+use App\Http\Controllers\UserProfilController;
+use App\Http\Controllers\MessagingController;
 
 Route::get('/', function () {
     return view('index');
@@ -90,10 +92,20 @@ Route::post('/recruitment/partials/step-6-paiement', [RecruitmentController::cla
 //Route::get('/appointments/partials/step6', [AppointmentsController::class, 'createStep6'])->name('appointments.partials.step6');
 
 Route::get('/recruitment/review', [RecruitmentController::class, 'review'])->name('recruitment.review');
-Route::post('/recruitment/store', [RecruitmentController::class, 'store'])->name('recruitment.store');
+Route::get('/recruitment/store/{barber_id}', [RecruitmentController::class, 'store'])->name('recruitment.store');
 
 Route::get('/recruitment-process', [RecruitmentController::class, 'traitmentrecruitment'])->name('recruitment.process');
 Route::post('/recruitment/review', [RecruitmentController::class, 'traitmentrecruitment']);
+
+// route pour enregistrer un recrutement
+Route::get('/recruitment/recruit-barber/{id}', [RecruitmentController::class, 'store'])->name('recruit.barber');
+
+// route pour afficher le profil d'un coiffeur
+Route::get('/user/view-profil/{id}', [UserProfilController::class, 'viewProfil'])->name('view.barber.profil');
+
+// route pour envoyer les messages 
+Route::get('/barber/{barber_id}/message', [MessagingController::class, 'view'])->name('messaging.view');
+Route::post('/message/send', [MessagingController::class, 'send'])->name('messaging.send');
 
 
 

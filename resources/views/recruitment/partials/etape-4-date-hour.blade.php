@@ -12,9 +12,12 @@
                 <div id="calendar"></div>
             <label for="dateInput">Choisissez une date :</label>
             <input type="date" id="selectedDate" name="date" required onchange="updateHiddenFields()">
-    
-            <label for="timeInput">Choisissez un horaire :</label>
-            <input type="time" id="selectedTime" name="time" required onchange="updateHiddenFields()">
+                <br>
+            <label for="timeInput">Choisissez une horaire de début :</label>
+            <input type="time" id="selectedstartTime" name="starttime" required onchange="updateHiddenFields()">
+            <br>
+            <label for="timeInput">Choisissez une horaire de fin :</label>
+            <input type="time" id="selectedendTime" name="endtime" required onchange="updateHiddenFields()">
 
             <div  id="dateError" class="danger"></div>
 
@@ -40,9 +43,10 @@
 
         function submitStep4() {
             const selectedDate = document.getElementById('selectedDate').value;
-            const selectedTime = document.getElementById('selectedTime').value;
+            const selectedTime1 = document.getElementById('selectedstartTime').value;
+            const selectedTime2 = document.getElementById('selectedendTime').value;
     
-            if (!selectedDate || !selectedTime) {
+            if (!selectedDate || !selectedTime1 || !selectedTime2) {
                 document.getElementById('dateError').innerHTML  = 'Veuillez sélectionner une date et une heure.';
                 return;
             }

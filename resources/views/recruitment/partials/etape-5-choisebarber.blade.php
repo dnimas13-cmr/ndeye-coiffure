@@ -6,32 +6,42 @@
         <div class='step-container left-step'>
             <div class='bg-shadow'>
                 <h4>{{ __('Hairdressers to suit your needs') }}</h4>
-                @foreach($users as $user)
-                @foreach($kills as $kill)
-                @foreach($countOccurrences as $occurrence)
-                <div class='item-dia d-flex mt-3'>
-                    <div class='img-dia left-c'>
-                        <img src="{{ asset('img/rdv/recrue-1.png') }}" alt="{{ __('Title Diagnostic') }}">
-                    </div>
-                    <div class='content-dia right-c'>
-                        <h3 class='mb-2'>{{ $user->name }}</h3>
-                        <div class='feat d-flex line-bottom-4'>
-                            <div><img src="{{ asset('img/icons/Clock.png') }}"> <span>4.8</span></div>
-                            <div><img src="{{ asset('img/icons/MapPin.png') }}"> <span>{{ $user->location_adress }}</span></div>
-                            <div><img src="{{ asset('img/icons/Scissors.png') }}"> <span>{{ $occurrence->count }} missions</span></div>
-                        </div>
-                        <div class='description-dia mt-2'>
-                            <h6>{{ __('Compétences') }}</h6>
-                            <div class='compet'>
-                                <span class='competence'>{{ $kill->kills }}</span>
-                                
-                            </div>
-                        </div>
-                    </div>
+                @foreach ($barberData as $data)
+    <div class='item-dia d-flex mt-3'>
+        <div class='img-dia left-c'>
+            <img src="{{ asset('img/rdv/recrue-1.png') }}" alt="{{ __('Title Diagnostic') }}">
+        </div>
+        <div class='content-dia right-c'>
+            <h3 class='mb-2'>{{ $data['user']->name ?? 'Nom inconnu' }}</h3>
+            <div class='feat d-flex line-bottom-4'>
+                <div><img src="{{ asset('img/icons/Clock.png') }}"> <span>4.8</span></div>
+                <div><img src="{{ asset('img/icons/MapPin.png') }}"> <span>{{ $data['user']->location_adress ?? 'Non spécifiée' }}</span></div>
+                <div><img src="{{ asset('img/icons/Scissors.png') }}"> <span>{{ $data['occurrenceCount'] }} missions</span></div>
+            </div>
+            <div class='description-dia mt-2'>
+            <h6>{{ __('Tarif horaire') }}</h6>
+            <div class="compet">
+                <span class="competence">{{ $data['hourly_rate'] }} €</span> <!-- Affichage de hourly_rate -->
+            </div>
+        </div>
+            <div class='description-dia mt-2'>
+                <div class='compet'>
+                    <h6>{{ __('Compétences') }}</h6>
+                    @foreach ($data['kills'] as $kill)
+                        <span class='competence'>{{ $kill->kills }}</span>
+                    @endforeach
                 </div>
-                @endforeach
-                @endforeach
-                @endforeach
+            </div>
+            <hr class="my-4">
+    <div class="text-center mt-2">
+        <a href="{{ route('view.barber.profil', $data['user']->id) }}" class="btn btn-primary">Voir le profil</a>
+        <a href="{{ route('recruit.barber', $data['user']->id) }}" class="btn btn-success">Recruter le coiffeur</a>
+    </div>
+        </div>
+    </div>
+    
+@endforeach
+
                 
                 <div class='pagination-dia d-flex justify-content-end mt-4'>
                     <div>

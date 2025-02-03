@@ -32,6 +32,10 @@ class AuthenticatedSessionController extends Controller
         {
             return redirect()->route('appointment.process');
         } 
+        elseif($request->session()->has('recruitmentverificationconnetion')) 
+        {
+            return redirect()->route('recruitment.partials.reason');
+        }
         else 
         {
 
